@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Task Manager</title>
+    </head>
+    <body>
+
+        <h1>Task Manager</h1>
+
+        <p>Welcome to my Django Task Manager {{username}}.</p>
+
+        {% if tasks %}
+        <ul>
+            {% for task in tasks %}
+            <li>
+                <strong>{{ task.title }}</strong>
+                <p> {{ task.description}}</p>
+                <p>
+                    Status:
+                    {%if task.completed %}
+                    Completed
+                    {%else%}
+                    Pending
+                    {% endif %}
+                </p>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No tasks available.</p>
+        {% endif %}
+
+    </body>
+</html>
