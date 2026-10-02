@@ -13,7 +13,8 @@
         <ul>
             {% for task in tasks %}
             <li>
-                <strong>{{ task.title }}</strong>
+                <a href="{% url 'task_detail' task.pk %}">
+                    <strong>{{ task.title}}</strong></a>
                 <p> {{ task.description}}</p>
                 <p>
                     Status:
@@ -23,12 +24,19 @@
                     Pending
                     {% endif %}
                 </p>
+
+                <a href="{% url 'task_update' task.pk %}">
+                    Edit
+                </a>
+                <a href="{% url 'task_delete' task.pk %}">
+                    Delete
+                </a>
             </li>
             {% endfor %}
         </ul>
         {% else %}
         <p>No tasks available.</p>
         {% endif %}
-
+        <a href="{% url 'task_create' %}"> </a>
     </body>
 </html>
