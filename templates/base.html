@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0">
+
+        <title>
+            {% block title %}
+            Task Manager
+            {% endblock %}
+        </title>
+        <link ref="stylesheet"
+            href="{% static 'css/style.css'%}">
+    </head>
+
+    <body>
+
+        <header>
+
+            <nav>
+
+                <a href="{% url 'task_list' %}">
+                    Task Manager
+                </a>
+
+                <a href="{% url 'task_list' %}">
+                    Tasks
+                </a>
+
+                <a href="{% url 'task_create' %}">
+                    Add Task
+                </a>
+                {% if user.is_authenticated %}
+
+                <span>
+                    hello, {{ user.username }}
+                </span>
+
+                {% else %}
+
+                <a href="{% url 'login' %}">
+                    login
+                </a>
+
+                {% if user.is_authenticated %}
+
+                <span>
+                    hello, {{ user.username }}
+                </span>
+
+                <form
+                    method="POST"
+                    action="{% url 'logout' %}">
+
+                    {% csrf_token %}
+
+                    <button type="submit">
+                        logout
+                    </button>
+
+                </form>
+
+                {% endif %}
+
+                {% endif %}
+            </nav>
+            {% if messages %}
+            <div>
+                {{ message }}
+            </div>
+
+            {% endif %}
+        </header>
+
+        <main>
+
+            {% block content %}
+
+            {% endblock %}
+
+        </main>
+
+    </body>
+
+</html>
