@@ -1,42 +1,74 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Task Manager</title>
-    </head>
-    <body>
+{% extends "base.html" %}
 
-        <h1>Task Manager</h1>
+{% block title %}
+My Tasks
+{% endblock %}
 
-        <p>Welcome to my Django Task Manager {{username}}.</p>
+{% block content %}
 
-        {% if tasks %}
-        <ul>
-            {% for task in tasks %}
-            <li>
-                <a href="{% url 'task_detail' task.pk %}">
-                    <strong>{{ task.title}}</strong></a>
-                <p> {{ task.description}}</p>
-                <p>
-                    Status:
-                    {%if task.completed %}
-                    Completed
-                    {%else%}
-                    Pending
-                    {% endif %}
-                </p>
+<h1>My Tasks</h1>
+<form method="GET">
 
-                <a href="{% url 'task_update' task.pk %}">
-                    Edit
-                </a>
-                <a href="{% url 'task_delete' task.pk %}">
-                    Delete
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No tasks available.</p>
-        {% endif %}
-        <a href="{% url 'task_create' %}"> </a>
-    </body>
-</html>
+    <input
+        type="text"
+        name="search"
+        placeholder="search tasks...">
+
+    <button type="submit">
+        search
+    </button>
+    <select name="status">
+
+        <option value>
+            all
+        </option>
+
+        <option value="completed">
+            completed
+        </option>
+
+        <option value="pending">
+            pending
+        </option>
+
+    </select>
+</form>
+<a href="{% url 'task_create' %}">
+    Add Task
+</a>
+
+{% if tasks %}
+
+{% for task in tasks %}
+
+<div>
+
+    <h3>
+        <a href="{% url 'task_detail' pk=task.pk %}">
+            {{ task.title }}
+        </a>
+    </h3>
+
+    <p>
+        {{ task.description }}
+    </p>
+
+    <a href="{% url 'task_update' pk=task.pk %}">
+        Edit
+    </a>
+
+    <a href="{% url 'task_delete' pk=task.pk %}">
+        Delete
+    </a>
+
+</div>
+
+{% endfor %}
+
+{% else %}
+
+<p>No tasks available.</p>
+
+{% endif %}
+
+{% endblock %}

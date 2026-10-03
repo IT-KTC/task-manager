@@ -1,326 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-        <title>{{ task.title }}</title>
+{% block title %}
 
-        <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+{{ task.title }}
 
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f6f8;
-            color: #1f2937;
-            min-height: 100vh;
-        }
+{% endblock %}
 
-        .container {
-            width: 90%;
-            max-width: 850px;
-            margin: 60px auto;
-        }
+{% block content %}
 
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            text-decoration: none;
-            color: #4f46e5;
-            font-weight: 600;
-        }
+<h1>
+    {{ task.title }}
+</h1>
 
-        .back-link:hover {
-            text-decoration: underline;
-        }
+<p>
+    {{ task.description }}
+</p>
 
-        .card {
-            background: white;
-            border-radius: 18px;
-            padding: 35px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-        }
+<p>
+    Status: {{ task.status }}
+</p>
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+<a href="{% url 'task_update' pk=task.pk %}">
+    Edit
+</a>
 
-        .title {
-            font-size: 32px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 10px;
-        }
+<a href="{% url 'task_delete' pk=task.pk %}">
+    Delete
+</a>
 
-        .status {
-            display: inline-block;
-            padding: 7px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-        }
+<a href="{% url 'task_list' %}">
+    Back
+</a>
 
-        .completed {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .section {
-            margin-bottom: 28px;
-        }
-
-        .section-title {
-            font-size: 14px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-
-        .description {
-            font-size: 17px;
-            line-height: 1.7;
-            color: #374151;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
-            margin-top: 25px;
-        }
-
-        .info-box {
-            background: #f9fafb;
-            padding: 18px;
-            border-radius: 12px;
-        }
-
-        .info-label {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 6px;
-        }
-
-        .info-value {
-            font-weight: 600;
-            color: #111827;
-        }
-
-        .actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 35px;
-            padding-top: 25px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 11px 20px;
-            border-radius: 9px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .btn-edit {
-            background: #4f46e5;
-            color: white;
-        }
-
-        .btn-edit:hover {
-            background: #4338ca;
-        }
-
-        .btn-delete {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .btn-delete:hover {
-            background: #fecaca;
-        }
-
-        .btn-back {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .btn-back:hover {
-            background: #d1d5db;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                margin: 25px auto;
-            }
-
-            .card {
-                padding: 22px;
-            }
-
-            .header {
-                flex-direction: column;
-            }
-
-            .title {
-                font-size: 26px;
-            }
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .actions {
-                flex-direction: column;
-            }
-
-            .btn {
-                text-align: center;
-            }
-        }
-    </style>
-    </head>
-
-    <body>
-
-        <div class="container">
-
-            <a href="{% url 'task_list' %}" class="back-link">
-                ← Back to task list
-            </a>
-
-            <div class="card">
-
-                <div class="header">
-
-                    <div>
-                        <h1 class="title">
-                            {{ task.title }}
-                        </h1>
-
-                        {% if task.completed %}
-                        <span class="status completed">
-                            ✓ Completed
-                        </span>
-                        {% else %}
-                        <span class="status pending">
-                            Pending
-                        </span>
-                        {% endif %}
-                    </div>
-
-                </div>
-
-                <div class="section">
-
-                    <div class="section-title">
-                        Description
-                    </div>
-
-                    <div class="description">
-
-                        {% if task.description %}
-                        {{ task.description }}
-                        {% else %}
-                        No description provided.
-                        {% endif %}
-
-                    </div>
-
-                </div>
-
-                <div class="info-grid">
-
-                    <div class="info-box">
-
-                        <div class="info-label">
-                            Status
-                        </div>
-
-                        <div class="info-value">
-                            {{ task.status }}
-                        </div>
-
-                    </div>
-
-                    <div class="info-box">
-
-                        <div class="info-label">
-                            Task ID
-                        </div>
-
-                        <div class="info-value">
-                            #{{ task.pk }}
-                        </div>
-
-                    </div>
-
-                    <div class="info-box">
-
-                        <div class="info-label">
-                            Created At
-                        </div>
-
-                        <div class="info-value">
-                            {{ task.created_at|date:"d/m/Y H:i" }}
-                        </div>
-
-                    </div>
-
-                    <div class="info-box">
-
-                        <div class="info-label">
-                            Updated At
-                        </div>
-
-                        <div class="info-value">
-                            {{ task.updated_at|date:"d/m/Y H:i" }}
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="actions">
-
-                    <a
-                        href="{% url 'task_update' pk=task.pk %}"
-                        class="btn btn-edit">
-                        Edit Task
-                    </a>
-
-                    <a
-                        href="{% url 'task_delete' pk=task.pk %}"
-                        class="btn btn-delete">
-                        Delete Task
-                    </a>
-
-                    <a
-                        href="{% url 'task_list' %}"
-                        class="btn btn-back">
-                        Back
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </body>
-</html>
+{% endblock %}

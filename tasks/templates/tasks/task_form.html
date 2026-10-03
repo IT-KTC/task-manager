@@ -1,32 +1,47 @@
-<!DOCTYPE html>
-<html>
-    <head>
+{% extends "base.html" %}
+
+{% block title %}
+
+{% if task %}
+Edit Task
+{% else %}
+Create Task
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+
+{% if task %}
+
+<h1>Edit Task</h1>
+
+{% else %}
+
+<h1>Create Task</h1>
+
+{% endif %}
+
+<form method="POST">
+
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+
         {% if task %}
-        <h1>Edit Task</h1>
+        Update Task
         {% else %}
-        <h1>Create Task</h1>
-        {% endif %}
-    </head>
-
-    <body>
-
-        {% if task %}
-        <h1>Edit Task</h1>
-        {% else %}
-        <h1>Create Task</h1>
+        Create Task
         {% endif %}
 
-        <form method="POST">
-            {% csrf_token %}
-            {{form.as_p}}
-            <button type="submit">
-                {% if task %}
-                Update Task
-                {% else %}
-                Create Task
-                {% endif %}
-            </button>
-        </form>
+    </button>
 
-    </body>
-</html>
+</form>
+
+<a href="{% url 'task_list' %}">
+    Cancel
+</a>
+
+{% endblock %}

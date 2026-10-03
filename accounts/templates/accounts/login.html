@@ -1,30 +1,31 @@
 {% extends "base.html" %}
 
 {% block title %}
-Delete Task
+login
 {% endblock %}
 
 {% block content %}
 
-<h1>Delete Task</h1>
-
-<p>
-    Are you sure you want to delete
-    "{{ task.title }}"?
-</p>
+<h1>login</h1>
 
 <form method="POST">
 
     {% csrf_token %}
 
+    {{ form.as_p }}
+
     <button type="submit">
-        Confirm Delete
+        login
     </button>
 
 </form>
 
-<a href="{% url 'task_list' %}">
-    Cancel
-</a>
+<p>
+    don't have an account?
+
+    <a href="{% url 'register' %}">
+        register
+    </a>
+</p>
 
 {% endblock %}
