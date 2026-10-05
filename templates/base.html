@@ -48,6 +48,7 @@
                     login
                 </a>
 
+                {% endif %}
                 {% if user.is_authenticated %}
 
                 <span>
@@ -57,16 +58,18 @@
                 <form
                     method="POST"
                     action="{% url 'logout' %}">
-
                     {% csrf_token %}
 
                     <button type="submit">
                         logout
                     </button>
-
                 </form>
 
-                {% endif %}
+                {% else %}
+
+                <a href="{% url 'login' %}">
+                    login
+                </a>
 
                 {% endif %}
             </nav>

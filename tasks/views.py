@@ -4,6 +4,7 @@ from django.contrib import messages
 from .models import Task
 from .forms import TaskForm
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 # Create your views here.
 @login_required
 def my_tasks(request): 
@@ -40,8 +41,17 @@ def task_list(request):
 
         elif status == "pending":
             tasks = tasks.filter(completed=False)
+
+    tasks = tasks.order_by("-created_at")
+    paginator = Paginator(tasks,5)
+
+
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
     context ={
-        "tasks": tasks
+        "tasks": page_obj,
+        "search": search,
+        "status": status
     }
     return render(request, "tasks/task_list.html",context)
 def task_detail(request):
@@ -67,7 +77,7 @@ def task_create(request):
     return render(request, "tasks/task_form.html", context)
 @login_required
 def task_update(request,pk):
-    task = get_object_or_404(Task, pk=pk)
+    task = get_object_or_404(Task, pk=pk, user = request.user)
     if request.method == "POST": 
         form = TaskForm(request.POST, instance=task )
         if form.is_valid(): 
@@ -86,7 +96,7 @@ def task_update(request,pk):
     return render(request, "tasks/task_form.html",context)
 @login_required
 def task_delete(request,pk):
-    task = get_object_or_404(Task,pk=pk)
+    task = get_object_or_404(Task,pk=pk,user = request.user)
     if request.method == "POST": 
         task.delete()
         messages.success(
@@ -98,9 +108,9 @@ def task_delete(request,pk):
         "task":task
     }
     return render(request,"tasks/task_confirm_delete.html", context)
-
+@login_required
 def task_detail(request, pk):
-    task = get_object_or_404(Task, pk = pk)
+    task = get_object_or_404(Task, pk = pk,user = request.user)
     context ={
         "task": task
     }
