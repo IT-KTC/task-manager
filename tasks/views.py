@@ -5,7 +5,27 @@ from .models import Task
 from .forms import TaskForm
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import FileResponse, Http404
+from .tasks import process_task, resize_task_image
+import asyncio 
+
 # Create your views here.
+async def async_test(request):
+    await asyncio.sleep(3)
+    return HttpResponse(
+        "async task finished"
+    )
+@login_required
+def task_download(request,pk):
+    task =get_object_or_404(Task, pk = pk , user = request.user)
+    if not task.attachment: 
+        raise Http404("file not found")
+    return FileResponse(
+        task.attachment.open("rb"),
+        as_attachment=True
+    )
+
+
 @login_required
 def my_tasks(request): 
 
@@ -49,26 +69,29 @@ def task_list(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     context ={
-        "tasks": page_obj,
+        "page_obj": page_obj,
         "search": search,
         "status": status
     }
     return render(request, "tasks/task_list.html",context)
-def task_detail(request):
-    return HttpResponse("ok")
+
 
 def task_about(request):
     return HttpResponse("This is the about page for the task manager application.")
 @login_required
 def task_create(request):
     if request.method == "POST":
-        form =  TaskForm(request.POST)
+        form =  TaskForm(request.POST, request.FILES)
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
             task.save()
+            if task.image: 
+                resize_task_image.delay(task.id)
             messages.success(request,"task created successfully")
             return redirect("task_list")
+        else:
+            print(form.errors)
     else: 
         form = TaskForm()
     context = {
@@ -79,7 +102,7 @@ def task_create(request):
 def task_update(request,pk):
     task = get_object_or_404(Task, pk=pk, user = request.user)
     if request.method == "POST": 
-        form = TaskForm(request.POST, instance=task )
+        form = TaskForm(request.POST, request.FILES,instance=task )
         if form.is_valid(): 
             form.save()
             messages.success(

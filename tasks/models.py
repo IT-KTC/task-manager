@@ -11,9 +11,18 @@ class Task(models.Model):
     def __str__(self):
         return self.title
     user = models.ForeignKey(
-    settings.AUTH_USER_MODEL,
-    on_delete=models.CASCADE,
-    related_name="tasks",
-    null=True,
-    blank=True,
-)
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tasks",
+        null=True,
+        blank=True,
+    )
+    attachment = models.FileField(
+        upload_to="task_attachments/",
+        blank=True
+    )
+    image = models.ImageField(
+        upload_to="task_image/",
+        blank = True,
+        null = True
+    )

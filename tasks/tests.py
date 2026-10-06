@@ -152,4 +152,24 @@ class TaskModelTest(TestCase):
             response.status_code,
             404
         )
+    def test_user_cannot_download_other_users_file(self):
+
+        self.client.login(
+        username="user_b",
+        password="12345678test"
+    )
+
+        response = self.client.get(
+        reverse(
+            "task_download",
+            kwargs={
+                "pk": self.task_a.pk
+            }
+        )
+    )
+
+        self.assertEqual(
+            response.status_code,
+            404
+        )
 
