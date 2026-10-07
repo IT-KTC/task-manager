@@ -1,4 +1,4 @@
-from django.urls import path 
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
@@ -11,5 +11,6 @@ urlpatterns = [
     path("<int:pk>/delete/",views.task_delete,name="task_delete"),
     path("<int:pk>/detail/",views.task_detail,name="task_detail"),
     path("<int:pk>/download/",views.task_download,name="task_download"),
-    path("async-test/", views.async_test, name="async_test")
+    path("async-test/", views.async_test, name="async_test"),
+   
 ]
