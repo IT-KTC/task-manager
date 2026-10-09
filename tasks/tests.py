@@ -1,8 +1,220 @@
+from rest_framework.test import APITestCase
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from .models import Task
+from rest_framework import status
 from django.urls import reverse
+User = get_user_model()
 # Create your tests here.
+
+class TeskAPITest(APITestCase): 
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="user1",
+            password="12345678"
+        )
+
+        self.other_user = User.objects.create_user(
+            username="user2",
+            password="12345678"
+        )
+
+        self.task = Task.objects.create(
+            user=self.user,
+            title="Learn Django",
+            description="Learn DRF testing",
+            status="pending",
+            completed=False,
+        )
+    def test_task_list_requires_authentication(self):
+        response = self.client.get(
+            "/api/tasks/"
+        )
+        self.assertIn(
+            response.status_code,
+            [
+                status.HTTP_401_UNAUTHORIZED,
+                status.HTTP_403_FORBIDDEN,
+            ]
+        )
+    def test_user_can_list_own_tasks(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/tasks/"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+    def test_user_only_sees_own_tasks(self):
+
+        Task.objects.create(
+            user=self.other_user,
+            title="Other User Task",
+            status="pending",
+            completed=False,
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/tasks/"
+        )
+
+        self.assertEqual(
+            response.data["count"],
+            1
+        )
+
+        self.assertEqual(
+            response.data["results"][0]["title"],
+            "Learn Django"
+        )
+    def test_user_can_create_task(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        data = {
+            "title": "Learn React",
+            "description": "Next step",
+            "status": "pending",
+            "completed": False,
+        }
+
+        response = self.client.post(
+            "/api/tasks/",
+            data,
+            format="json"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED
+        )
+    def test_owner_can_update_task(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task.id}/",
+            {
+                "completed": True
+            },
+            format="json"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+
+        self.task.refresh_from_db()
+
+        self.assertTrue(
+            self.task.completed
+        )
+    def test_other_user_cannot_update_task(self):
+
+        self.client.force_authenticate(
+            user=self.other_user
+        )
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task.id}/",
+            {
+                "completed": True
+            },
+            format="json"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND
+        )
+    def test_owner_can_delete_task(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.delete(
+            f"/api/tasks/{self.task.id}/"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_204_NO_CONTENT
+        )
+
+        self.assertFalse(
+            Task.objects.filter(
+                id=self.task.id
+            ).exists()
+        )
+    def test_search_tasks(self):
+
+        Task.objects.create(
+            user=self.user,
+            title="Learn React",
+            status="pending",
+            completed=False,
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/tasks/?search=django"
+        )
+
+        self.assertEqual(
+            response.data["count"],
+            1
+        )
+
+        self.assertEqual(
+            response.data["results"][0]["title"],
+            "Learn Django"
+        )
+    def test_filter_by_status(self):
+
+        Task.objects.create(
+            user=self.user,
+            title="Finished Task",
+            status="completed",
+            completed=True,
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/tasks/?status=pending"
+        )
+
+        self.assertEqual(
+            response.data["count"],
+            1
+        )
+
+        self.assertEqual(
+            response.data["results"][0]["status"],
+            "pending"
+        )
+
 class TaskModelTest(TestCase):
     def setUp(self): 
         User = get_user_model()
