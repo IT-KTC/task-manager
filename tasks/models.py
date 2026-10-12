@@ -26,3 +26,14 @@ class Task(models.Model):
         blank = True,
         null = True
     )
+class Meta: 
+    indexes = [
+        models.Index(
+            fields=[
+                "user",
+                "status",
+                "-created_at"
+            ],
+            name="task_user_status_created_idx",
+        )
+    ]
