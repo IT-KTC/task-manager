@@ -1,6 +1,18 @@
 from django.db import models
 from django.conf import settings
 # Create your models here.
+
+
+class TaskQuerySet(models.QuerySet):
+    def pending(self):
+        return self.filter(status = "pending")
+    def complete(self):
+        return self.filter(completed = True)
+    def for_user(self,user ):
+        return self.filter(user = user)
+    def recent(self):
+        return self.order_by("-created_at")
+
 class Task(models.Model):
     title= models.CharField(max_length=200)
     description= models.TextField(blank=True)
@@ -10,6 +22,7 @@ class Task(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return self.title
+    objects = TaskQuerySet.as_manager()
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

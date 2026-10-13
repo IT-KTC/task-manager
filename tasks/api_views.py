@@ -8,8 +8,9 @@ from rest_framework.response import Response
 from .models import Task
 from .serializers import TaskSerializer
 from .permissions import IsOwner
-
-
+from .services import complete_task
+from hashlib import sha256
+from django.core.cache import cache
 class TaskViewSet(viewsets.ModelViewSet):
 
 
@@ -45,9 +46,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
 
-        queryset = Task.objects.filter(
-            user=self.request.user
-        )
+        queryset = Task.objects.for_user(self.request.user)
+
 
     
         status_value = self.request.query_params.get("status")
@@ -73,23 +73,41 @@ class TaskViewSet(viewsets.ModelViewSet):
         url_path="stats"
     )
     def stats(self, request):
-
+        query_hash = sha256(request.get_full.path().encore("utf-8")).hexdigest()
+        cache_key = (f"task_stats:user:{request.user.pk}"f"{query_hash}")
+        result = cache.get(cache_key)
+        if result is not None:
+            print("CACHE HIT")
+            return Response(result)
+        print("CACHE MISS")
         queryset = self.filter_queryset(
             self.get_queryset()
         )
-
         result = queryset.aggregate(
             total=Count("id"),
-
             completed=Count(
                 "id",
                 filter=Q(completed=True)
             ),
-
             incomplete=Count(
                 "id",
                 filter=Q(completed=False)
             ),
         )
-
+        cache.set(
+            cache_key,
+            result,
+            timeout=30  
+        )
         return Response(result)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="complete"
+    )
+    def complete(self, request, pk =None):
+        task = self.get_object()
+        complete_task(task)
+        serializer = self.get_serializer(task)
+        return Response(serializer.data)

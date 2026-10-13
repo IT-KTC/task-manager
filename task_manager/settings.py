@@ -188,3 +188,40 @@ SIMPLE_JWT = {
         days=7
     ),
 }
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379/1",
+        "TIMEOUT": 300,
+        "KEY_PREFIX": "taskmanager",
+    }
+}
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        "verbose": {
+            "format": (
+                "%(asctime)s %(levelname)s "
+                "[%(name)s] %(message)s"
+            ),
+        },
+    },
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+            "level": "INFO",
+        },
+    },
+
+    "loggers": {
+        "tasks": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
