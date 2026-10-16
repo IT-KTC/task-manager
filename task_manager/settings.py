@@ -10,17 +10,20 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
-from pathlib import Path
 import os
 from datetime import timedelta
+from pathlib import Path
+
 from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
-
+DJANGO_ENV = os.getenv("DJANGO_ENV", "local")
+IS_PYTHONANYWHERE = DJANGO_ENV == "pythonanywhere"
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ["SECRET_KEY"]
 
@@ -225,3 +228,57 @@ LOGGING = {
         },
     },
 }
+
+
+# ============================================
+# PYTHONANYWHERE PRODUCTION CONFIGURATION
+# ============================================
+
+if IS_PYTHONANYWHERE:
+
+    # 1. Security
+    DEBUG = False
+
+    SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
+
+    pythonanywhere_host = os.environ["PYTHONANYWHERE_HOST"]
+
+    ALLOWED_HOSTS = [
+        pythonanywhere_host,
+    ]
+
+    CSRF_TRUSTED_ORIGINS = [
+        f"https://{pythonanywhere_host}",
+    ]
+
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # 2. Database: SQLite instead of PostgreSQL
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+            "OPTIONS": {
+                "timeout": 20,
+            },
+        }
+    }
+
+    # 3. Cache: local memory instead of Redis
+    CACHES = {
+        "default": {
+            "BACKEND": (
+                "django.core.cache.backends.locmem.LocMemCache"
+            ),
+            "LOCATION": "task-manager-pythonanywhere",
+        }
+    }
+
+    # 4. Static files
+    STATIC_URL = "/static/"
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+
+    # 5. Uploaded files
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
