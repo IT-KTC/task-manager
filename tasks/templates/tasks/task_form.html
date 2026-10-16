@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}
+
+{% if task %}
+Edit Task
+{% else %}
+Create Task
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+
+{% if task %}
+
+<h1>Edit Task</h1>
+
+{% else %}
+
+<h1>Create Task</h1>
+
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+
+        {% if task %}
+        Update Task
+        {% else %}
+        Create Task
+        {% endif %}
+
+    </button>
+
+</form>
+
+<a href="{% url 'task_list' %}">
+    Cancel
+</a>
+
+{% endblock %}

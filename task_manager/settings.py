@@ -10,23 +10,37 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
+from datetime import timedelta
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+load_dotenv(BASE_DIR / ".env")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
-
+DJANGO_ENV = os.getenv("DJANGO_ENV", "local")
+IS_PYTHONANYWHERE = DJANGO_ENV == "pythonanywhere"
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-szzl2ij0zh$4m8vm135-x6aq1otr#ao0&x_69%zyo5cxyt*(4j'
+SECRET_KEY = os.environ["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv(
+    "DEBUG",
+    "False"
+).lower() == "true"
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        "ALLOWED_HOSTS",
+        ""
+    ).split(",")
+    if host.strip()
+]
 
 # Application definition
 
@@ -37,8 +51,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+    "rest_framework",
+
+    "rest_framework.authtoken",
     "tasks",
+    "accounts"
+
+
 ]
 
 MIDDLEWARE = [
@@ -56,7 +75,7 @@ ROOT_URLCONF = 'task_manager.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -75,9 +94,13 @@ WSGI_APPLICATION = 'task_manager.wsgi.application'
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ["DB_NAME"],
+        "USER": os.environ["DB_USER"],
+        "PASSWORD": os.environ["DB_PASSWORD"],
+        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 
@@ -118,7 +141,13 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
@@ -127,3 +156,129 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "task_list"
+LOGOUT_REDIRECT_URL = "login"
+
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+
+CELERY_BROKER_URL = os.getenv(
+    "CELERY_BROKER_URL",
+    "redis://127.0.0.1:6379/0"
+)
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PAGINATION_CLASS":
+        "rest_framework.pagination.PageNumberPagination",
+
+    "PAGE_SIZE": 5,
+}
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        minutes=15
+    ),
+
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        days=7
+    ),
+}
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379/1",
+        "TIMEOUT": 300,
+        "KEY_PREFIX": "taskmanager",
+    }
+}
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        "verbose": {
+            "format": (
+                "%(asctime)s %(levelname)s "
+                "[%(name)s] %(message)s"
+            ),
+        },
+    },
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+            "level": "INFO",
+        },
+    },
+
+    "loggers": {
+        "tasks": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+
+# ============================================
+# PYTHONANYWHERE PRODUCTION CONFIGURATION
+# ============================================
+
+if IS_PYTHONANYWHERE:
+
+    # 1. Security
+    DEBUG = False
+
+    SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
+
+    pythonanywhere_host = os.environ["PYTHONANYWHERE_HOST"]
+
+    ALLOWED_HOSTS = [
+        pythonanywhere_host,
+    ]
+
+    CSRF_TRUSTED_ORIGINS = [
+        f"https://{pythonanywhere_host}",
+    ]
+
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # 2. Database: SQLite instead of PostgreSQL
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+            "OPTIONS": {
+                "timeout": 20,
+            },
+        }
+    }
+
+    # 3. Cache: local memory instead of Redis
+    CACHES = {
+        "default": {
+            "BACKEND": (
+                "django.core.cache.backends.locmem.LocMemCache"
+            ),
+            "LOCATION": "task-manager-pythonanywhere",
+        }
+    }
+
+    # 4. Static files
+    STATIC_URL = "/static/"
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+
+    # 5. Uploaded files
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"

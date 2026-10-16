@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}
+my tasks
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="page-header">
+
+        <div>
+            <h1>my tasks</h1>
+
+            <p>
+                manage your tasks here
+            </p>
+        </div>
+
+        <a
+            href="{% url 'task_create' %}"
+            class="btn btn-primary">
+            add task
+        </a>
+
+    </div>
+
+    <!-- search + filter -->
+    <form method="GET" class="filter-form">
+
+        <input
+            type="text"
+            name="search"
+            value="{{ search }}"
+            placeholder="search tasks...">
+
+        <select name="status">
+
+            <option
+                value
+                {% if not status %}
+                selected
+                {% endif %}>
+                all
+            </option>
+
+            <option
+                value="completed"
+                {% if status == "completed" %}
+                selected
+                {% endif %}>
+                completed
+            </option>
+
+            <option
+                value="pending"
+                {% if status == "pending" %}
+                selected
+                {% endif %}>
+                pending
+            </option>
+
+        </select>
+
+        <button
+            type="submit"
+            class="btn btn-primary">
+            search
+        </button>
+
+        <a
+            href="{% url 'task_list' %}"
+            class="btn btn-secondary">
+            reset
+        </a>
+
+    </form>
+
+    <!-- task list -->
+    {% if page_obj %}
+
+    <div class="task-list">
+
+        {% for task in page_obj %}
+
+        <div class="task-card">
+
+            <div class="task-card-header">
+
+                <h3>
+
+                    <a
+                        href="{% url 'task_detail' pk=task.pk %}">
+                        {{ task.title }}
+                    </a>
+
+                </h3>
+
+                {% if task.completed %}
+
+                <span class="status completed">
+                    completed
+                </span>
+
+                {% else %}
+
+                <span class="status pending">
+                    pending
+                </span>
+
+                {% endif %}
+
+            </div>
+
+            <div class="task-card-body">
+
+                {% if task.description %}
+
+                <p>
+                    {{ task.description }}
+                </p>
+
+                {% else %}
+
+                <p>
+                    no description
+                </p>
+
+                {% endif %}
+
+                <p>
+                    status:
+                    {{ task.status }}
+                </p>
+
+                <p>
+                    created:
+                    {{ task.created_at|date:"d/m/Y H:i" }}
+                </p>
+
+            </div>
+
+            <div class="task-actions">
+
+                <a
+                    href="{% url 'task_detail' pk=task.pk %}"
+                    class="btn btn-secondary">
+                    view
+                </a>
+
+                <a
+                    href="{% url 'task_update' pk=task.pk %}"
+                    class="btn btn-primary">
+                    edit
+                </a>
+
+                <a
+                    href="{% url 'task_delete' pk=task.pk %}"
+                    class="btn btn-danger">
+                    delete
+                </a>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <!-- pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+
+    <div class="pagination">
+
+        {% if page_obj.has_previous %}
+
+        <a
+            href="?search={{ search }}&status={{ status }}&page=1">
+            first
+        </a>
+
+        <a
+            href="?search={{ search }}&status={{ status }}&page={{ page_obj.previous_page_number }}">
+            previous
+        </a>
+
+        {% endif %}
+
+        <span>
+            page {{ page_obj.number }}
+            of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+
+        <a
+            href="?search={{ search }}&status={{ status }}&page={{ page_obj.next_page_number }}">
+            next
+        </a>
+
+        <a
+            href="?search={{ search }}&status={{ status }}&page={{ page_obj.paginator.num_pages }}">
+            last
+        </a>
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+    {% else %}
+
+    <div class="empty-state">
+
+        <p>
+            no tasks found
+        </p>
+
+        <a
+            href="{% url 'task_create' %}"
+            class="btn btn-primary">
+            create your first task
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
