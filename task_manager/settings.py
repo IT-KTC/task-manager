@@ -25,7 +25,7 @@ load_dotenv(BASE_DIR / ".env")
 DJANGO_ENV = os.getenv("DJANGO_ENV", "local")
 IS_PYTHONANYWHERE = DJANGO_ENV == "pythonanywhere"
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ["SECRET_KEY"]
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv(
@@ -93,16 +93,7 @@ WSGI_APPLICATION = 'task_manager.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ["DB_NAME"],
-        "USER": os.environ["DB_USER"],
-        "PASSWORD": os.environ["DB_PASSWORD"],
-        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
-        "PORT": os.getenv("DB_PORT", "5432"),
-    }
-}
+
 
 
 # Password validation
@@ -282,3 +273,15 @@ if IS_PYTHONANYWHERE:
     # 5. Uploaded files
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
+else:  
+    SECRET_KEY = os.environ["SECRET_KEY"]
+    DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ["DB_NAME"],
+        "USER": os.environ["DB_USER"],
+        "PASSWORD": os.environ["DB_PASSWORD"],
+        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("DB_PORT", "5432"),
+    }
+}
