@@ -1,6 +1,9 @@
-from django import forms
-from .models import Task 
 from pathlib import Path
+
+from django import forms
+from PIL import Image, UnidentifiedImageError
+
+from .models import Task
 
 
 class TaskForm(forms.ModelForm):
@@ -14,6 +17,45 @@ class TaskForm(forms.ModelForm):
             "attachment",
             "image"
         ]
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+
+        if not image:
+            return image
+
+        max_size = 5 * 1024 * 1024
+        max_pixels = 10_000_000
+
+        if image.size > max_size:
+            raise forms.ValidationError(
+                "Image must be smaller than 5 MB."
+            )
+
+        try:
+            image.seek(0)
+
+            with Image.open(image) as img:
+                if img.format not in ("JPEG", "PNG", "WEBP"):
+                    raise forms.ValidationError(
+                        "Only JPEG, PNG and WEBP are allowed."
+                    )
+
+                if img.width * img.height > max_pixels:
+                    raise forms.ValidationError(
+                        "Image dimensions are too large."
+                    )
+
+                img.verify()
+
+        except (UnidentifiedImageError, OSError) as exc:
+            raise forms.ValidationError(
+                "Invalid image file."
+            ) from exc
+
+        finally:
+            image.seek(0)
+
+        return image
     def clean_attachment(self):
         max_size = 5 * 1024 * 1024
         file = self.cleaned_data.get(

@@ -1,14 +1,22 @@
+from datetime import timedelta
 from io import BytesIO
 from tempfile import TemporaryDirectory
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from PIL import Image, UnidentifiedImageError
 from rest_framework import status
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import (
+    AccessToken,
+    RefreshToken,
+)
 
+from tasks.models import Task
+
+from .forms import TaskForm
 from .models import Task
 from .tasks import resize_task_image
 
@@ -670,3 +678,115 @@ class PrivateTaskMediaTests(TestCase):
                 reverse(name, args=[self.task.pk])
             )
             self.assertEqual(response.status_code, 302)
+class TaskUploadValidationTests(SimpleTestCase):
+
+    def test_rejects_large_attachment(self):
+        large_file = SimpleUploadedFile(
+            "document.pdf",
+            b"x" * (5 * 1024 * 1024 + 1),
+            content_type="application/pdf",
+        )
+
+        form = TaskForm(
+            data={"title": "Test Task"},
+            files={"attachment": large_file},
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("attachment", form.errors)
+
+    def test_rejects_invalid_attachment_extension(self):
+        invalid_file = SimpleUploadedFile(
+            "script.exe",
+            b"invalid content",
+            content_type="application/octet-stream",
+        )
+
+        form = TaskForm(
+            data={"title": "Test Task"},
+            files={"attachment": invalid_file},
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("attachment", form.errors)
+class TaskAPISecurityTests(APITestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.owner = User.objects.create_user(
+            username="security_owner",
+            password="TestPass123!",
+        )
+        self.other_user = User.objects.create_user(
+            username="security_other",
+            password="TestPass123!",
+        )
+        
+        
+        self.task = Task.objects.create(
+            user=self.owner,
+            title="Private Task",
+            status="pending",
+            completed=False,
+        )
+    def test_anonymous_cannot_access_tasks(self):
+        response = self.client.get("/api/tasks/")
+        self.assertIn(
+            response.status_code,
+            [401, 403],
+        )
+    def test_valid_jwt_can_access_api(self):
+        token = RefreshToken.for_user(self.owner)
+        self.client.credentials(
+            HTTP_AUTHORIZATION = f"Bearer {token.access_token}"
+        )
+        response = self.client.get("/api/tasks/")
+        self.assertEqual(response.status_code, 200)
+    def test_other_user_cannot_access_private_task(self):
+        self.client.force_authenticate(
+            user=self.other_user
+        )
+
+        url = f"/api/tasks/{self.task.pk}/"
+
+        for response in (
+            self.client.get(url),
+            self.client.patch(
+                url,
+                {"title": "Unauthorized"},
+                format="json",
+            ),
+            self.client.delete(url),
+        ):
+            self.assertEqual(response.status_code, 404)
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.title,
+            "Private Task",
+        )
+
+    def test_user_cannot_fake_task_owner(self):
+        self.client.force_authenticate(
+            user=self.owner
+        )
+
+        response = self.client.post(
+            "/api/tasks/",
+            {
+                "title": "Forged Ownership",
+                "user": self.other_user.pk,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        created_task = Task.objects.get(
+            pk=response.data["id"]
+        )
+
+        self.assertEqual(
+            created_task.user,
+            self.owner,
+        )
