@@ -1,9 +1,11 @@
-from rest_framework.test import APITestCase
-from django.test import TestCase
 from django.contrib.auth import get_user_model
-from .models import Task
-from rest_framework import status
+from django.test import TestCase
 from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+from .models import Task
+
 User = get_user_model()
 # Create your tests here.
 
@@ -214,6 +216,69 @@ class TeskAPITest(APITestCase):
             response.data["results"][0]["status"],
             "pending"
         )
+    def test_stats_only_counts_current_user_tasks(self):
+        Task.objects.create(
+            user = self.user,
+            title = "Completed Task",
+            status = "completed",
+            completed = True
+        )
+        Task.objects.create(
+            user = self.other_user,
+            title = "Other User Task",
+            status = "completed",
+            completed = True
+        )
+        self.client.force_authenticate(user = self.user)
+        response = self.client.get("/api/tasks/stats/")
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(
+            response.data,
+            { 
+                "total":2,
+                "completed": 1,
+                "incomplete":1
+            
+            }
+        
+        )
+    def test_stats_updates_after_creating_task(self):
+        self.client.force_authenticate(user = self.user)
+        first_response = self.client.get("/api/tasks/stats/")
+        self.assertEqual(
+            first_response.data["total"],
+            1
+        )
+        Task.objects.create(
+            user = self.user,
+            title = "New Task",
+            status = "pending",
+            completed = False
+        )
+        second_response = self.client.get("/api/tasks/stats/")
+        self.assertEqual(
+            second_response.data["total"],
+            2,
+        )
+    def test_stats_filters_by_status(self):
+        Task.objects.create(
+            user = self.user,
+            title = "Finished Task",
+            status = "completed",
+            completed = True
+        )
+        self.client.force_authenticate(user = self.user)
+        response = self.client.get("/api/tasks/stats/",{"status": "pending"})
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(
+            response.data,
+            {
+            "total":1,
+            "completed":0,
+            "incomplete": 1
+            },
+        )
+
 
 class TaskModelTest(TestCase):
     def setUp(self): 
@@ -385,3 +450,4 @@ class TaskModelTest(TestCase):
             404
         )
 
+   

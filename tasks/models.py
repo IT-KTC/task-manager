@@ -1,5 +1,6 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+
 # Create your models here.
 
 
@@ -40,7 +41,7 @@ class Task(models.Model):
         null = True
     )
 class Meta: 
-    indexes = [
+    indexes = (
         models.Index(
             fields=[
                 "user",
@@ -49,4 +50,4 @@ class Meta:
             ],
             name="task_user_status_created_idx",
         )
-    ]
+    )
