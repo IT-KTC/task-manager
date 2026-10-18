@@ -1,94 +1,74 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Task Manager{% endblock %}</title>
 
-    <head>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header class="tm-header">
+        <div class="tm-header__inner">
+            <a class="tm-brand" href="{% url 'task_list' %}" aria-label="Task Manager - Trang chủ">
+                <span class="tm-brand__icon" aria-hidden="true">✓</span>
+                <span class="tm-brand__label">Task<span>Manager</span></span>
+            </a>
 
-        <meta charset="UTF-8">
-
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0">
-
-        <title>
-            {% block title %}
-            Task Manager
-            {% endblock %}
-        </title>
-        <link ref="stylesheet"
-            href="{% static 'css/style.css'%}">
-    </head>
-
-    <body>
-
-        <header>
-
-            <nav>
-
-                <a href="{% url 'task_list' %}">
-                    Task Manager
+            <nav class="tm-nav" aria-label="Điều hướng chính">
+                <a href="{% url 'task_list' %}"
+                   class="tm-nav__link {% if request.resolver_match.url_name == 'task_list' %}is-active{% endif %}"
+                   {% if request.resolver_match.url_name == 'task_list' %}aria-current="page"{% endif %}>
+                    Công việc của tôi
                 </a>
-
-                <a href="{% url 'task_list' %}">
-                    Tasks
+                <a href="{% url 'task_create' %}"
+                   class="tm-nav__link {% if request.resolver_match.url_name == 'task_create' %}is-active{% endif %}"
+                   {% if request.resolver_match.url_name == 'task_create' %}aria-current="page"{% endif %}>
+                    + Tạo công việc
                 </a>
-
-                <a href="{% url 'task_create' %}">
-                    Add Task
-                </a>
-                {% if user.is_authenticated %}
-
-                <span>
-                    hello, {{ user.username }}
-                </span>
-
-                {% else %}
-
-                <a href="{% url 'login' %}">
-                    login
-                </a>
-
-                {% endif %}
-                {% if user.is_authenticated %}
-
-                <span>
-                    hello, {{ user.username }}
-                </span>
-
-                <form
-                    method="POST"
-                    action="{% url 'logout' %}">
-                    {% csrf_token %}
-
-                    <button type="submit">
-                        logout
-                    </button>
-                </form>
-
-                {% else %}
-
-                <a href="{% url 'login' %}">
-                    login
-                </a>
-
-                {% endif %}
             </nav>
-            {% if messages %}
-            <div>
-                {{ message }}
+
+            <div class="tm-header__actions">
+                {% if user.is_authenticated %}
+                    <details class="tm-user-menu">
+                        <summary class="tm-user-menu__trigger" aria-label="Menu tài khoản">
+                            <span class="tm-user-menu__avatar" aria-hidden="true">{{ user.username|slice:':1'|upper }}</span>
+                            <span class="tm-user-menu__identity">
+                                <span class="tm-user-menu__name">{{ user.username }}</span>
+                                <span class="tm-user-menu__subtitle">Tài khoản</span>
+                            </span>
+                            <span class="tm-user-menu__chevron" aria-hidden="true">⌄</span>
+                        </summary>
+                        <div class="tm-user-menu__dropdown">
+                            <p class="tm-user-menu__greeting">Xin chào, <strong>{{ user.username }}</strong></p>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button class="tm-user-menu__logout" type="submit">Đăng xuất</button>
+                            </form>
+                        </div>
+                    </details>
+                {% else %}
+                    <a class="tm-auth-link" href="{% url 'login' %}">Đăng nhập</a>
+                    <a class="tm-auth-button" href="{% url 'register' %}">Đăng ký</a>
+                {% endif %}
             </div>
+        </div>
+    </header>
 
-            {% endif %}
-        </header>
+    {% if messages %}
+        <div class="tm-alerts" aria-live="polite">
+            {% for message in messages %}
+                <div class="tm-alert {% if message.tags %}tm-alert--{{ message.tags }}{% endif %}" role="status">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-        <main>
-
-            {% block content %}
-
-            {% endblock %}
-
-        </main>
-
-    </body>
-
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    {% block extra_js %}{% endblock %}
+</body>
 </html>

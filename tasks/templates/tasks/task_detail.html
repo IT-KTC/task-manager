@@ -1,59 +1,151 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}
+{% block title %}{{ task.title }} | Task Manager{% endblock %}
 
-{{ task.title }}
-
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task_detail.css' %}">
 {% endblock %}
 
 {% block content %}
+<div class="td-page">
+    <nav class="td-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'task_list' %}">My tasks</a>
+        <span aria-hidden="true">/</span>
+        <span>Task details</span>
+    </nav>
 
-<h1>
-    {{ task.title }}
-</h1>
+    <section class="td-hero" aria-labelledby="td-task-title">
+        <div class="td-hero__body">
+            <div class="td-hero__eyebrow">
+                <span class="td-hero__dot"></span>
+                TASK MANAGER / TASK #{{ task.pk }}
+            </div>
+            <h1 id="td-task-title">{{ task.title }}</h1>
+            <p class="td-hero__subtitle">View the details, progress, and files
+                for this task.</p>
 
-<p>
-    {{ task.description }}
-</p>
+            <div class="td-hero__meta">
+                {% if task.status == 'completed' %}
+                <span class="td-status td-status--completed"><span
+                        aria-hidden="true">✓</span> Completed</span>
+                {% elif task.status == 'in_progress' %}
+                <span class="td-status td-status--progress"><span
+                        aria-hidden="true">◷</span> In progress</span>
+                {% elif task.status == 'pending' %}
+                <span class="td-status td-status--pending"><span
+                        aria-hidden="true">●</span> Pending</span>
+                {% else %}
+                <span class="td-status td-status--neutral">{{
+                    task.status|default:'Unknown status'|title }}</span>
+                {% endif %}
+                <span class="td-hero__owner">
+                    Owned by {{ task.user.username|default:"Unknown user" }}
+                </span>
+            </div>
+        </div>
+        <div class="td-hero__pattern" aria-hidden="true"></div>
+    </section>
 
-<p>
-    Status: {{ task.status }}
-</p>
+    <div class="td-layout">
+        <div class="td-main">
+            <section class="td-card" aria-labelledby="td-description-title">
+                <div class="td-card__heading">
+                    <div class="td-card__heading-icon"
+                        aria-hidden="true">≡</div>
+                    <div>
+                        <h2 id="td-description-title">Description</h2>
+                        <p>Information about this task</p>
+                    </div>
+                </div>
 
-{% if task.attachment %}
-<p>
-    attachment:
-    {% if task.attachment %}
+                {% if task.description %}
+                <div class="td-description">
+                    {{ task.description|linebreaksbr }}
+                </div>
+                {% else %}
+                <p class="td-empty">
+                    No description has been added yet.
+                </p>
+                {% endif %}
+            </section>
 
-    <a href="{% url 'task_download' task.pk %}">
-        download attachment
-    </a>
-    <a href="{{task.attachment.url}}" target="_blank">
-        open file
-    </a>
-    {% endif %}
-    {% if task.image %}
+            {% if task.image %}
+            <section class="td-card" aria-labelledby="td-image-title">
+                <div class="td-card__heading">
+                    <div class="td-card__heading-icon"
+                        aria-hidden="true">▧</div>
+                    <div>
+                        <h2 id="td-image-title">Task image</h2>
+                        <p>Image attached to this task</p>
+                    </div>
+                </div>
+                <div class="td-image-frame">
+                    <img src="{% url 'task_image' task.pk %}"
+                        alt="Image attached to {{ task.title }}"
+                        loading="lazy">
+                </div>
+            </section>
+            {% endif %}
 
-    <img
-        src="{{ task.image.url }}"
-        alt="{{ task.title }}"
-        width="300">
+            {% if task.attachment %}
+            <section class="td-card" aria-labelledby="td-attachment-title">
+                <div class="td-card__heading">
+                    <div class="td-card__heading-icon"
+                        aria-hidden="true">↧</div>
+                    <div>
+                        <h2 id="td-attachment-title">Attachment</h2>
+                        <p>Private file — only the owner can download</p>
+                    </div>
+                </div>
+                <div class="td-attachment">
+                    <div class="td-attachment__icon" aria-hidden="true">▤</div>
+                    <div class="td-attachment__info">
+                        <strong>{{ task.attachment.name }}</strong>
+                        <span>Attached document</span>
+                    </div>
+                    <a class="td-btn td-btn--primary td-attachment__button"
+                        href="{% url 'task_download' task.pk %}">Download <span
+                            aria-hidden="true">↓</span></a>
+                </div>
+            </section>
+            {% endif %}
+        </div>
 
-    {% endif %}
+        <aside class="td-sidebar" aria-label="Task information and actions">
+            <section class="td-card td-card--sidebar">
+                <h2 class="td-sidebar__title">Task information</h2>
+                <div class="td-info-row">
+                    <span>Status</span>
+                    <strong>{{ task.status|default:'—'|title }}</strong>
+                </div>
+                <div class="td-info-row">
+                    <span>Created</span>
+                    <strong>{{ task.created_at|date:'d M Y, H:i' }}</strong>
+                </div>
+                <div class="td-info-row">
+                    <span>Last updated</span>
+                    <strong>{{ task.updated_at|date:'d M Y, H:i' }}</strong>
+                </div>
+                <div class="td-info-row">
+                    <span>Task ID</span>
+                    <strong>#{{ task.pk }}</strong>
+                </div>
+            </section>
 
-</p>
-{%endif%}
-
-<a href="{% url 'task_update' pk=task.pk %}">
-    Edit
-</a>
-
-<a href="{% url 'task_delete' pk=task.pk %}">
-    Delete
-</a>
-
-<a href="{% url 'task_list' %}">
-    Back
-</a>
-
+            <section class="td-card td-card--sidebar">
+                <h2 class="td-sidebar__title">Actions</h2>
+                <p class="td-sidebar__hint">Need to change something?</p>
+                <a class="td-btn td-btn--primary td-btn--full"
+                    href="{% url 'task_update' pk=task.pk %}">Edit task <span
+                        aria-hidden="true">↗</span></a>
+                <a class="td-btn td-btn--danger td-btn--full"
+                    href="{% url 'task_delete' pk=task.pk %}">Delete task <span
+                        aria-hidden="true">×</span></a>
+                <a class="td-btn td-btn--ghost td-btn--full"
+                    href="{% url 'task_list' %}">← Back to tasks</a>
+            </section>
+        </aside>
+    </div>
+</div>
 {% endblock %}

@@ -1,10 +1,16 @@
+from io import BytesIO
+from tempfile import TemporaryDirectory
+
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from PIL import Image, UnidentifiedImageError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .models import Task
+from .tasks import resize_task_image
 
 User = get_user_model()
 # Create your tests here.
@@ -449,5 +455,218 @@ class TaskModelTest(TestCase):
             response.status_code,
             404
         )
+    def test_filter_status_without_search(self):
+        Task.objects.create(
+            user=self.user_a,
+            title="Finished Task A",
+            status="completed",
+            completed=True,
+        )
 
-   
+        self.client.login(
+            username="user_a",
+            password="12345678test",
+        )
+
+        response = self.client.get(
+            reverse("task_list"),
+            {"status": "completed"},
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        titles = [
+            task.title
+            for task in response.context["page_obj"]
+        ]
+
+        self.assertEqual(
+            titles,
+            ["Finished Task A"],
+        )
+
+class ResizeImageTests(TestCase):
+
+    def setUp(self):
+        self.temp_dir = TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+
+        media_override = override_settings(
+            MEDIA_ROOT=self.temp_dir.name
+        )
+        media_override.enable()
+        self.addCleanup(media_override.disable)
+
+        self.user = User.objects.create_user(
+            username="image_tester",
+            password="testpass123",
+        )
+
+        buffer = BytesIO()
+
+        Image.new(
+            "RGB",
+            (1200, 600),
+        ).save(
+            buffer,
+            format="PNG",
+        )
+
+        uploaded_image = SimpleUploadedFile(
+            "original.png",
+            buffer.getvalue(),
+            content_type="image/png",
+        )
+
+        self.task = Task.objects.create(
+            user=self.user,
+            title="Test Image",
+            image=uploaded_image,
+        )
+
+    def test_image_is_resized(self):
+        original_name = self.task.image.name
+        storage = self.task.image.storage
+
+        resize_task_image.run(self.task.pk)
+
+        self.task.refresh_from_db()
+
+        self.assertNotEqual(
+            self.task.image.name,
+            original_name,
+        )
+
+        with storage.open(
+            self.task.image.name,
+            "rb",
+        ) as file, Image.open(file) as image:
+            self.assertEqual(
+                image.size,
+                (800, 800),
+            )
+            self.assertEqual(
+                image.format,
+                "JPEG",
+            )
+
+        # Ảnh gốc vẫn được giữ
+        self.assertTrue(
+            storage.exists(original_name)
+        )
+
+    def test_resize_does_not_run_twice(self):
+        resize_task_image.run(self.task.pk)
+
+        self.task.refresh_from_db()
+        first_image_name = self.task.image.name
+
+        resize_task_image.run(self.task.pk)
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.image.name,
+            first_image_name,
+        )
+
+    def test_missing_task_is_ignored(self):
+        resize_task_image.run(999999)
+
+    def test_broken_image_preserves_original(self):
+        broken_file = SimpleUploadedFile(
+            "broken.png",
+            b"this is not a real image",
+            content_type="image/png",
+        )
+
+        self.task.image = broken_file
+        self.task.save(update_fields=["image"])
+
+        original_name = self.task.image.name
+        storage = self.task.image.storage
+
+        with self.assertRaises(UnidentifiedImageError):
+            resize_task_image.run(self.task.pk)
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.image.name,
+            original_name,
+        )
+
+        self.assertTrue(
+            storage.exists(original_name)
+        )
+class PrivateTaskMediaTests(TestCase):
+
+    def setUp(self):
+        temp_dir = TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+
+        media_settings = override_settings(
+            MEDIA_ROOT=temp_dir.name
+        )
+        media_settings.enable()
+        self.addCleanup(media_settings.disable)
+
+        self.owner = User.objects.create_user(
+            username="owner_media",
+            password="testpass123",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="other_media",
+            password="testpass123",
+        )
+
+        buffer = BytesIO()
+        Image.new(
+            "RGB",
+            (20, 20),
+        ).save(buffer, format="PNG")
+
+        self.task = Task.objects.create(
+            user=self.owner,
+            title="Private Task",
+            attachment=SimpleUploadedFile(
+                "private.pdf",
+                b"%PDF-1.4\nTest",
+                content_type="application/pdf",
+            ),
+            image=SimpleUploadedFile(
+                "private.png",
+                buffer.getvalue(),
+                content_type="image/png",
+            ),
+        )
+
+    def test_owner_can_access_media(self):
+        self.client.force_login(self.owner)
+
+        for name in ("task_download", "task_image"):
+            response = self.client.get(
+                reverse(name, args=[self.task.pk])
+            )
+            self.assertEqual(response.status_code, 200)
+            response.close()
+
+    def test_other_user_cannot_access_media(self):
+        self.client.force_login(self.other_user)
+
+        for name in ("task_download", "task_image"):
+            response = self.client.get(
+                reverse(name, args=[self.task.pk])
+            )
+            self.assertEqual(response.status_code, 404)
+
+    def test_anonymous_cannot_access_media(self):
+        for name in ("task_download", "task_image"):
+            response = self.client.get(
+                reverse(name, args=[self.task.pk])
+            )
+            self.assertEqual(response.status_code, 302)

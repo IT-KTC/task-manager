@@ -1,13 +1,29 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+import asyncio
+import logging
+import mimetypes
+from pathlib import Path
+
 from django.contrib import messages
-from .models import Task
-from .forms import TaskForm
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.http import FileResponse, Http404
-from .tasks import process_task, resize_task_image
-import asyncio 
+from django.db import transaction
+from django.http import FileResponse, Http404, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+
+from .forms import TaskForm
+from .models import Task
+from .tasks import resize_task_image
+
+logger = logging.getLogger(__name__)
+
+def queue_image_resize(task_id):
+    try:
+        resize_task_image.delay(task_id)
+    except Exception:
+        logger.exception(
+            "Failed to enqueue image resize for Task %s",
+            task_id,
+        )
 
 # Create your views here.
 async def async_test(request):
@@ -20,12 +36,70 @@ def task_download(request,pk):
     task =get_object_or_404(Task, pk = pk , user = request.user)
     if not task.attachment: 
         raise Http404("file not found")
-    return FileResponse(
-        task.attachment.open("rb"),
-        as_attachment=True
+
+    try: 
+        file = task.attachment.storage.open(
+            task.attachment.name,
+            "rb"
+        )
+    except OSError as exc:
+        raise Http404("File not found") from exc
+
+    
+    response = FileResponse(
+        file,
+        as_attachment=True,
+        filename=Path(task.attachment.name).name,
+        content_type="application/octet-stream",
     )
 
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Cache-Control"] = "private, no-store"
 
+    return response
+
+@login_required
+def task_image(request, pk):
+    task = get_object_or_404(
+        Task,
+        pk=pk,
+        user=request.user,
+    )
+
+    if not task.image:
+        raise Http404("Image not found")
+
+    content_type, _ = mimetypes.guess_type(
+        task.image.name
+    )
+
+    allowed_types = {
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+    }
+
+    if content_type not in allowed_types:
+        raise Http404("Unsupported image type")
+
+    try:
+        file = task.image.storage.open(
+            task.image.name,
+            "rb",
+        )
+    except OSError as exc:
+        raise Http404("Image not found") from exc
+
+    response = FileResponse(
+        file,
+        content_type=content_type,
+    )
+
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Cache-Control"] = "private, no-store"
+
+    return response
 @login_required
 def my_tasks(request): 
 
@@ -49,32 +123,55 @@ def my_tasks(request):
         }
     return render(request, "tasks/my_tasks.html",context)
 @login_required
-def task_list(request): 
-    tasks = Task.objects.filter(user=request.user)
+def task_list(request):
+    tasks = Task.objects.for_user(
+        request.user
+    )
 
-    search = request.GET.get("search")
-    status = request.GET.get("status", "")
+    search = request.GET.get(
+        "search", ""
+    ).strip()
+
+    status = request.GET.get(
+        "status", ""
+    ).strip()
+
+    # Search độc lập
     if search:
-        tasks = tasks.filter(title__icontains=search)
-        if status == "completed":
-            tasks = tasks.filter(completed=True)
+        tasks = tasks.filter(
+            title__icontains=search
+        )
 
-        elif status == "pending":
-            tasks = tasks.filter(completed=False)
+    # Filter độc lập
+    if status in {
+        "pending",
+        "in_progress",
+        "completed",
+    }:
+        tasks = tasks.filter(
+            status=status
+        )
 
-    tasks = tasks.order_by("-created_at")
-    paginator = Paginator(tasks,5)
+    # Sorting
+    tasks = tasks.order_by(
+        "-created_at",
+        "-pk",
+    )
 
+    paginator = Paginator(tasks, 5)
 
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
-    context ={
-        "page_obj": page_obj,
-        "search": search,
-        "status": status
-    }
-    return render(request, "tasks/task_list.html",context)
 
+    return render(
+        request,
+        "tasks/task_list.html",
+        {
+            "page_obj": page_obj,
+            "search": search,
+            "status": status,
+        },
+    )
 
 def task_about(request):
     return HttpResponse("This is the about page for the task manager application.")
@@ -85,11 +182,13 @@ def task_create(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
-            task.save()
-            if task.image: 
-                resize_task_image.delay(task.id)
-            messages.success(request,"task created successfully")
-            return redirect("task_list")
+            with transaction.atomic():
+                task.save()
+                if task.image: 
+                    transaction.on_commit(
+                        lambda task_id = task.pk: queue_image_resize(task_id))
+                messages.success(request,"task created successfully")
+                return redirect("task_list")
         else:
             print(form.errors)
     else: 
