@@ -16,7 +16,26 @@ urlpatterns = [
     "<int:pk>/image/",
     views.task_image,
     name="task_image",
-),
+    ),
+    path(
+        "dashboard/",
+        views.dashboard,
+        name="dashboard",
+    ),
     path("async-test/", views.async_test, name="async_test"),
-   
+    path(
+        "<int:pk>/quick-status/",
+        views.task_quick_status,
+        name="task_quick_status",
+    ),
+    path(
+      "kanban/",
+      views.kanban_board,
+      name="kanban_board",
+    ),
+    path(
+        "<int:pk>/kanban-move/",
+        views.kanban_move_task,
+        name="kanban_move_task",
+    ),
 ]

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Kanban Board | Task Manager{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/kanban.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="kb-page">
+    <section class="kb-hero" aria-labelledby="kb-page-title">
+        <div class="kb-hero__content">
+            <p class="kb-hero__eyebrow">TASK MANAGER / WORKFLOW</p>
+            <h1 id="kb-page-title">Kanban Board</h1>
+            <p class="kb-hero__description">
+                Organize your work, see what is in progress, and celebrate what is done.
+            </p>
+            <div class="kb-hero__actions">
+                <a class="kb-button kb-button--light" href="{% url 'task_create' %}">+ New Task</a>
+                <a class="kb-button kb-button--outline" href="{% url 'task_list' %}">View Task List &rarr;</a>
+            </div>
+        </div>
+        <div class="kb-hero__graphic" aria-hidden="true">▦</div>
+    </section>
+    <form id="kb-csrf-form" hidden>
+        {% csrf_token %}
+    </form>
+
+    <p
+        class="kb-notice"
+        data-kb-message
+        role="status"
+        aria-live="polite"
+        hidden
+    ></p>
+    <section class="kb-board" aria-label="Task workflow columns">
+        {% for column in columns %}
+        <section
+            class="kb-column kb-column--{{ column.key }}"
+            data-status="{{ column.key }}"
+            aria-labelledby="kb-heading-{{ column.key }}"
+        >
+            <header class="kb-column__header">
+                <div class="kb-column__heading">
+                    <span class="kb-column__dot" aria-hidden="true"></span>
+                    <h2 id="kb-heading-{{ column.key }}">{{ column.title }}</h2>
+                </div>
+                <span class="kb-column__count" aria-label="Number of tasks">
+                    {{ column.tasks|length }}
+                </span>
+            </header>
+            <p class="kb-column__description">{{ column.description }}</p>
+
+            <div class="kb-column__body">
+                {% for task in column.tasks %}
+                <article
+                    class="kb-card"
+                    draggable="true"
+                    data-task-id="{{ task.pk }}"
+                    data-move-url="{% url 'kanban_move_task' task.pk %}"
+                >
+                    <div class="kb-card__top">
+                        <span class="kb-priority kb-priority--{{ task.priority }}">
+                            {{ task.get_priority_display }} priority
+                        </span>
+                        <span class="kb-card__id">#{{ task.pk }}</span>
+                    </div>
+
+                    <h3 class="kb-card__title">
+                        <a href="{% url 'task_detail' pk=task.pk %}">{{ task.title }}</a>
+                    </h3>
+
+                    {% if task.description %}
+                    <p class="kb-card__description">{{ task.description|truncatechars:110 }}</p>
+                    {% else %}
+                    <p class="kb-card__description kb-card__description--empty">No description yet.</p>
+                    {% endif %}
+
+                    <div class="kb-card__footer">
+                        {% if task.due_date %}
+                        <span class="kb-due {% if task.is_overdue %}kb-due--overdue{% endif %}">
+                            <span aria-hidden="true">◷</span>
+                            {{ task.due_date|date:"d/m/Y" }}
+                        </span>
+                        {% else %}
+                        <span class="kb-due kb-due--unset">No deadline</span>
+                        {% endif %}
+
+                        {% if task.is_overdue %}
+                        <span class="kb-overdue">Overdue</span>
+                        {% endif %}
+                    </div>
+                </article>
+                {% empty %}
+                <div class="kb-empty">
+                    <span class="kb-empty__icon" aria-hidden="true">□</span>
+                    <p>No tasks in this column</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script
+    defer
+    src="{% static 'js/kanban_drag.js' %}"
+></script>
+{% endblock %}

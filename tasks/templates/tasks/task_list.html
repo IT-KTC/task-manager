@@ -1,12 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
+{% block title %}My Tasks | Task Manager{% endblock %}
 
-{% block title %}
-my tasks
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task_list.css' %}">
 {% endblock %}
+
+
 
 {% block content %}
 
-<div class="container">
+<div class="container task-list-page">
 
     <div class="page-header">
 
@@ -27,55 +31,71 @@ my tasks
     </div>
 
     <!-- search + filter -->
-    <form method="GET" class="filter-form">
+    
+<form method="get" class="filter-form">
 
-        <input
-            type="text"
-            name="search"
-            value="{{ search }}"
-            placeholder="search tasks...">
+    <input
+        type="search"
+        name="search"
+        value="{{ search }}"
+        placeholder="Search tasks..."
+    >
 
-        <select name="status">
+    <select name="status">
+        <option value="">All statuses</option>
+        <option value="pending">Pending</option>
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+    </select>
 
-            <option
-                value
-                {% if not status %}
-                selected
-                {% endif %}>
-                all
-            </option>
+    <select name="priority">
+        <option value="">All priorities</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+    </select>
 
-            <option
-                value="completed"
-                {% if status == "completed" %}
-                selected
-                {% endif %}>
-                completed
-            </option>
+    <select name="overdue">
+        <option value="">All deadlines</option>
+        <option value="1">Overdue only</option>
+    </select>
 
-            <option
-                value="pending"
-                {% if status == "pending" %}
-                selected
-                {% endif %}>
-                pending
-            </option>
+    <select name="sort">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="deadline">Nearest deadline</option>
+        <option value="priority">Highest priority</option>
+    </select>
 
-        </select>
+    <button type="submit" class="btn btn-primary">
+        Apply filters
+    </button>
 
-        <button
-            type="submit"
-            class="btn btn-primary">
-            search
-        </button>
+    <a href="{% url 'task_list' %}" class="btn btn-secondary">
+        Reset
+    </a>
 
-        <a
-            href="{% url 'task_list' %}"
-            class="btn btn-secondary">
-            reset
-        </a>
+</form>
 
-    </form>
+<script>
+    // Khôi phục giá trị bộ lọc sau khi reload
+    const currentFilters = {
+        status: "{{ status|escapejs }}",
+        priority: "{{ priority|escapejs }}",
+        overdue: "{{ overdue|escapejs }}",
+        sort: "{{ sort|escapejs }}"
+    };
+
+    const filterForm = document.querySelector(".filter-form");
+
+    Object.entries(currentFilters).forEach(([name, value]) => {
+        const select = filterForm.elements.namedItem(name);
+        if (select) {
+            select.value = value;
+        }
+    });
+</script>
+
 
     <!-- task list -->
     {% if page_obj %}
@@ -97,18 +117,12 @@ my tasks
 
                 </h3>
 
-                {% if task.completed %}
-
-                <span class="status completed">
-                    completed
-                </span>
-
+                {% if task.status == "completed" %}
+                <span class="status completed">Completed</span>
+                {% elif task.status == "in_progress" %}
+                <span class="status in-progress">In Progress</span>
                 {% else %}
-
-                <span class="status pending">
-                    pending
-                </span>
-
+                <span class="status pending">Pending</span>
                 {% endif %}
 
             </div>
@@ -133,7 +147,27 @@ my tasks
                     status:
                     {{ task.status }}
                 </p>
+                <div class="task-extra-info">
 
+                    {% if task.priority == "high" %}
+                        <span class="task-priority task-priority--high">High Priority</span>
+                    {% elif task.priority == "medium" %}
+                        <span class="task-priority task-priority--medium">Medium Priority</span>
+                    {% else %}
+                        <span class="task-priority task-priority--low">Low Priority</span>
+                    {% endif %}
+
+                    {% if task.due_date %}
+                        <span class="task-deadline">
+                            📅 {{ task.due_date|date:"d/m/Y" }}
+                        </span>
+                    {% endif %}
+
+                    {% if task.is_overdue %}
+                        <span class="task-overdue">⚠ Overdue</span>
+                    {% endif %}
+
+                </div>
                 <p>
                     created:
                     {{ task.created_at|date:"d/m/Y H:i" }}
@@ -160,7 +194,54 @@ my tasks
                     class="btn btn-danger">
                     delete
                 </a>
+                <form
+                    method="post"
+                    action="{% url 'task_quick_status' task.pk %}"
+                    class="task-quick-form"
+                >
+                    {% csrf_token %}
 
+                    <input
+                        type="hidden"
+                        name="next"
+                        value="{{ request.get_full_path }}"
+                    >
+
+                    {% if task.status == "pending" %}
+
+                        <button
+                            type="submit"
+                            name="status"
+                            value="in_progress"
+                            class="quick-status-btn quick-status-btn--start"
+                        >
+                            ▶ Start Task
+                        </button>
+
+                    {% elif task.status == "in_progress" %}
+
+                        <button
+                            type="submit"
+                            name="status"
+                            value="completed"
+                            class="quick-status-btn quick-status-btn--complete"
+                        >
+                            ✓ Complete
+                        </button>
+
+                    {% elif task.status == "completed" %}
+
+                        <button
+                            type="submit"
+                            name="status"
+                            value="pending"
+                            class="quick-status-btn quick-status-btn--reopen"
+                        >
+                            ↺ Reopen
+                        </button>
+
+                    {% endif %}
+                </form>
             </div>
 
         </div>
@@ -176,10 +257,9 @@ my tasks
 
         {% if page_obj.has_previous %}
 
-        <a
-            href="?search={{ search }}&status={{ status }}&page=1">
-            first
-        </a>
+        
+        <a href="{% querystring page=1 %}">First</a>
+        
 
         <a href="{% querystring page=page_obj.previous_page_number %}">
             Previous
@@ -198,9 +278,8 @@ my tasks
             Next
         </a>
 
-        <a
-            href="?search={{ search }}&status={{ status }}&page={{ page_obj.paginator.num_pages }}">
-            last
+        <a href="{% querystring page=page_obj.paginator.num_pages %}">
+            Last
         </a>
 
         {% endif %}

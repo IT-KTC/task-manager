@@ -1,26 +1,129 @@
-{% extends 'base.html' %}
 
-{% block title %}
-register
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Register | Task Manager{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
 {% endblock %}
 
 {% block content %}
 
-<h1>register</h1>
-<form method="POST">
-    {% csrf_token %}
-    {{form.as_p}}
+<div class="auth-page">
+    <div class="auth-shell">
 
-    <button type="submit">
-        register
-    </button>
-</form>
-<p>
-    already have an account?
+        <aside class="auth-brand-panel">
+            <div class="auth-brand">
+                <span class="auth-brand-icon">✓</span>
+                <span>TaskManager</span>
+            </div>
 
-    <a href="{% url 'login' %}">
-        login
-    </a>
-</p>
+            <div class="auth-brand-content">
+                <span class="auth-eyebrow">
+                    START YOUR JOURNEY
+                </span>
+
+                <h1>Make every task count.</h1>
+
+                <p>
+                    Create your personal workspace
+                    and start managing your work
+                    with more clarity and focus.
+                </p>
+
+                <div class="auth-feature-list">
+                    <div>✓ Track task progress</div>
+                    <div>✓ Prioritize important work</div>
+                    <div>✓ Manage deadlines in one place</div>
+                </div>
+            </div>
+
+            <div class="auth-brand-footer">
+                Plan better. Achieve more.
+            </div>
+        </aside>
+
+        <main class="auth-form-panel">
+
+            <div class="auth-form-content">
+
+                <span class="auth-top-label">
+                    GET STARTED
+                </span>
+
+                <h2>Create your account</h2>
+
+                <p class="auth-subtitle">
+                    Fill in the information below
+                    to get started.
+                </p>
+
+                <form method="post" class="auth-form">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="auth-error-box" role="alert">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    {% for field in form %}
+
+                    <div class="auth-field">
+
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}
+
+                            {% if field.field.required %}
+                            <span class="auth-required">*</span>
+                            {% endif %}
+                        </label>
+
+                        {{ field }}
+
+                        {% if field.help_text %}
+                        <div class="auth-help">
+                            {{ field.help_text|safe }}
+                        </div>
+                        {% endif %}
+
+                        {% if field.errors %}
+                        <div class="auth-field-error" role="alert">
+                            {{ field.errors }}
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+                    {% endfor %}
+
+                    <button type="submit" class="auth-submit">
+                        Create Account
+                        <span aria-hidden="true">→</span>
+                    </button>
+
+                </form>
+
+                <div class="auth-divider">
+                    <span>Already have an account?</span>
+                </div>
+
+                <a
+                    href="{% url 'login' %}"
+                    class="auth-secondary-link"
+                >
+                    Back to Sign In
+                </a>
+
+            </div>
+        </main>
+
+    </div>
+
+    <p class="auth-page-footer">
+        TaskManager · Your personal productivity workspace
+    </p>
+</div>
 
 {% endblock %}

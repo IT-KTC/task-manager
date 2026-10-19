@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard | Task Manager{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dash-page">
+
+    <!-- PAGE HEADER -->
+    <section class="dash-hero">
+        <div>
+            <span class="dash-eyebrow">WORKSPACE OVERVIEW</span>
+            <h1>Xin chào, {{ request.user.username }} 👋</h1>
+            <p>
+                Chào mừng trở lại! Đây là tổng quan
+                công việc của bạn.
+            </p>
+        </div>
+
+        <a href="{% url 'task_create' %}"
+            class="dash-create-btn">
+            + Tạo công việc
+        </a>
+    </section>
+
+    <!-- STATISTICS -->
+    <section class="dash-stats">
+
+        <article class="dash-stat-card">
+            <div class="dash-stat-icon blue">▤</div>
+            <span class="dash-stat-label">Tổng công việc</span>
+            <strong>{{ total_count }}</strong>
+            <small>Tất cả công việc của bạn</small>
+        </article>
+
+        <article class="dash-stat-card">
+            <div class="dash-stat-icon green">✓</div>
+            <span class="dash-stat-label">Đã hoàn thành</span>
+            <strong>{{ completed_count }}</strong>
+            <small>Công việc đã hoàn tất</small>
+        </article>
+
+        <article class="dash-stat-card">
+            <div class="dash-stat-icon purple">◷</div>
+            <span class="dash-stat-label">Đang thực hiện</span>
+            <strong>{{ progress_count }}</strong>
+            <small>Công việc đang xử lý</small>
+        </article>
+
+        <article class="dash-stat-card">
+            <div class="dash-stat-icon orange">○</div>
+            <span class="dash-stat-label">Chờ thực hiện</span>
+            <strong>{{ pending_count }}</strong>
+            <small>Công việc chưa bắt đầu</small>
+        </article>
+        <article class="dash-stat-card dash-stat-card--overdue">
+            <div class="dash-stat-icon red">!</div>
+
+            <span class="dash-stat-label">
+                Công việc quá hạn
+            </span>
+
+            <strong>{{ overdue_count }}</strong>
+
+            <small>
+                Cần ưu tiên xử lý
+            </small>
+        </article>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <div class="dash-content">
+
+        <!-- RECENT TASKS -->
+        <section class="dash-panel">
+
+            <div class="dash-panel-header">
+                <div>
+                    <h2>Công việc gần đây</h2>
+                    <p>5 công việc được tạo gần nhất</p>
+                </div>
+
+                <a href="{% url 'task_list' %}"
+                    class="dash-text-link">
+                    Xem tất cả →
+                </a>
+            </div>
+
+            <div class="dash-task-list">
+                {% for task in recent_tasks %}
+
+                <div class="dash-task-row">
+
+                    <div class="dash-task-info">
+                        <a href="{% url 'task_detail' pk=task.pk %}"
+                            class="dash-task-title">
+                            {{ task.title }}
+                        </a>
+
+                        <span class="dash-task-date">
+                            {{ task.created_at|date:"d/m/Y H:i" }}
+                        </span>
+                    </div>
+
+                    <div class="dash-task-right">
+                        {% if task.status == "completed" %}
+                        <span class="dash-status completed">
+                            Hoàn thành
+                        </span>
+                        {% elif task.status == "in_progress" %}
+                        <span class="dash-status in-progress">
+                            Đang thực hiện
+                        </span>
+                        {% else %}
+                        <span class="dash-status pending">
+                            Chờ thực hiện
+                        </span>
+                        {% endif %}
+
+                        <a href="{% url 'task_detail' pk=task.pk %}"
+                            class="dash-view-link">
+                            Xem →
+                        </a>
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="dash-empty">
+                    <div class="dash-empty-icon">✓</div>
+                    <h3>Chưa có công việc nào</h3>
+                    <p>Hãy tạo công việc đầu tiên của bạn.</p>
+                    <a href="{% url 'task_create' %}">
+                        Tạo công việc
+                    </a>
+                </div>
+
+                {% endfor %}
+            </div>
+
+        </section>
+
+        <!-- PROGRESS -->
+        <aside class="dash-panel dash-progress-panel">
+
+            <h2>Tiến độ công việc</h2>
+            <p>Theo dõi hiệu suất hoàn thành</p>
+
+            <div class="dash-progress-value">
+                {{ completion_rate }}%
+            </div>
+
+            <div class="dash-progress-track"
+                role="progressbar"
+                aria-valuenow="{{ completion_rate }}"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-label="Tiến độ hoàn thành công việc">
+
+                <div class="dash-progress-fill"
+                    style="width: {{ completion_rate }}%;">
+                </div>
+            </div>
+
+            <div class="dash-progress-summary">
+                <span>Đã hoàn thành</span>
+                <strong>
+                    {{ completed_count }}/{{ total_count }}
+                </strong>
+            </div>
+
+            <a href="{% url 'task_list' %}"
+                class="dash-all-tasks-btn">
+                Quản lý công việc →
+            </a>
+
+        </aside>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -369,3 +369,39 @@
     transform: none;
   }
 }
+/* Priority */
+
+.td-priority {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.td-priority--high {
+  background: #fee2e2;
+  color: #b91c1c !important;
+}
+
+.td-priority--medium {
+  background: #fef3c7;
+  color: #92400e !important;
+}
+
+.td-priority--low {
+  background: #dcfce7;
+  color: #166534 !important;
+}
+
+/* Deadline Warning */
+
+.td-overdue-alert {
+  margin-top: 15px;
+  padding: 13px 15px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}

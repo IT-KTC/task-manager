@@ -120,6 +120,33 @@
                     <strong>{{ task.status|default:'—'|title }}</strong>
                 </div>
                 <div class="td-info-row">
+                    <span>Priority</span>
+
+                    {% if task.priority == "high" %}
+                        <strong class="td-priority td-priority--high">High</strong>
+                    {% elif task.priority == "medium" %}
+                        <strong class="td-priority td-priority--medium">Medium</strong>
+                    {% else %}
+                        <strong class="td-priority td-priority--low">Low</strong>
+                    {% endif %}
+                </div>
+
+                <div class="td-info-row">
+                    <span>Deadline</span>
+
+                    {% if task.due_date %}
+                        <strong>{{ task.due_date|date:"d/m/Y" }}</strong>
+                    {% else %}
+                        <strong>Not set</strong>
+                    {% endif %}
+                </div>
+
+                {% if task.is_overdue %}
+                <div class="td-overdue-alert">
+                    ⚠ This task is overdue!
+                </div>
+                {% endif %}
+                <div class="td-info-row">
                     <span>Created</span>
                     <strong>{{ task.created_at|date:'d M Y, H:i' }}</strong>
                 </div>

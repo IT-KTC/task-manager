@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 from PIL import Image, UnidentifiedImageError
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -41,6 +42,46 @@ class TeskAPITest(APITestCase):
             description="Learn DRF testing",
             status="pending",
             completed=False,
+        )
+    def test_api_status_update_syncs_completed(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task.pk}/",
+            {"status": "completed"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.status,
+            Task.Status.COMPLETED,
+        )
+        self.assertTrue(self.task.completed)
+
+
+    def test_api_rejects_conflicting_status(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task.pk}/",
+            {
+                "status": "completed",
+                "completed": False,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.status,
+            Task.Status.PENDING,
         )
     def test_task_list_requires_authentication(self):
         response = self.client.get(
@@ -367,6 +408,40 @@ class TaskModelTest(TestCase):
             "task of user b"
         )
     def test_create_task_assigns_current_user(self):
+        self.client.login(
+            username="user_a",
+            password="12345678test",
+        )
+
+        response = self.client.post(
+            reverse("task_create"),
+            {
+                "title": "new task",
+                "description": "new task description",
+                "status": "pending",
+                "completed": False,
+                "priority": Task.Priority.MEDIUM,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("task_list"),
+        )
+
+        task = Task.objects.get(
+            title="new task"
+        )
+
+        self.assertEqual(
+            task.user,
+            self.user_a,
+        )
+
+        self.assertEqual(
+            task.priority,
+            Task.Priority.MEDIUM,
+        )
         self.client.login(
             username="user_a",
             password="12345678test"
@@ -816,3 +891,576 @@ class SessionConnectionTests(TestCase):
             int(self.client.session["_auth_user_id"]),
             user.pk,
         )
+class DashboardTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="dashboard_user",
+            password="testpass123",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="another_user",
+            password="testpass123",
+        )
+
+        Task.objects.create(
+            user=self.user,
+            title="Pending Task",
+            status="pending",
+        )
+
+        Task.objects.create(
+            user=self.user,
+            title="Completed Task",
+            status="completed",
+            completed=True,
+        )
+
+        Task.objects.create(
+            user=self.other_user,
+            title="Secret Task",
+            status="pending",
+        )
+
+    def test_dashboard_requires_login(self):
+        response = self.client.get(
+            reverse("dashboard")
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_dashboard_statistics(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("dashboard")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["total_count"], 2)
+        self.assertEqual(response.context["pending_count"], 1)
+        self.assertEqual(response.context["completed_count"], 1)
+        self.assertEqual(response.context["completion_rate"], 50)
+
+    def test_dashboard_shows_only_own_tasks(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("dashboard")
+        )
+
+        self.assertContains(response, "Pending Task")
+        self.assertContains(response, "Completed Task")
+        self.assertNotContains(response, "Secret Task")
+    def test_dashboard_overdue_count(self):
+        yesterday = timezone.localdate() - timedelta(days=1)
+
+        # Task quá hạn của User hiện tại
+        Task.objects.create(
+            user=self.user,
+            title="Overdue Task",
+            status=Task.Status.IN_PROGRESS,
+            due_date=yesterday,
+        )
+
+        # Task đã hoàn thành: không tính là overdue
+        Task.objects.create(
+            user=self.user,
+            title="Completed Old Task",
+            status=Task.Status.COMPLETED,
+            completed=True,
+            due_date=yesterday,
+        )
+
+        # Task của người khác: không được tính
+        Task.objects.create(
+            user=self.other_user,
+            title="Other User Overdue",
+            status=Task.Status.PENDING,
+            due_date=yesterday,
+        )
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.context["overdue_count"],
+            1,
+        )
+class TaskPriorityDeadlineTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="priority_user",
+            password="testpass123",
+        )
+
+    def test_default_priority(self):
+        task = Task.objects.create(
+            user=self.user,
+            title="Default Priority Task",
+        )
+
+        self.assertEqual(
+            task.priority,
+            Task.Priority.MEDIUM,
+        )
+
+    def test_overdue_task(self):
+        task = Task.objects.create(
+            user=self.user,
+            title="Overdue Task",
+            status=Task.Status.PENDING,
+            due_date=timezone.localdate()
+            - timedelta(days=1),
+        )
+
+        self.assertTrue(task.is_overdue)
+
+    def test_completed_task_is_not_overdue(self):
+        task = Task.objects.create(
+            user=self.user,
+            title="Completed Task",
+            status=Task.Status.COMPLETED,
+            due_date=timezone.localdate()
+            - timedelta(days=1),
+        )
+
+        self.assertFalse(task.is_overdue)
+
+    def test_task_without_deadline(self):
+        task = Task.objects.create(
+            user=self.user,
+            title="No Deadline",
+        )
+
+        self.assertFalse(task.is_overdue)
+class TaskAdvancedFilterTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="filter_user",
+            password="testpass123",
+        )
+        self.other_user = User.objects.create_user(
+            username="other_filter_user",
+            password="testpass123",
+        )
+
+        yesterday = timezone.localdate() - timedelta(days=1)
+        tomorrow = timezone.localdate() + timedelta(days=1)
+
+        Task.objects.create(
+            user=self.user,
+            title="Urgent Report",
+            status="pending",
+            priority="high",
+            due_date=yesterday,
+        )
+
+        Task.objects.create(
+            user=self.user,
+            title="Documentation",
+            status="in_progress",
+            priority="medium",
+            due_date=tomorrow,
+        )
+
+        Task.objects.create(
+            user=self.user,
+            title="No Deadline Task",
+            status="pending",
+            priority="low",
+        )
+
+        Task.objects.create(
+            user=self.other_user,
+            title="Secret Urgent Task",
+            status="pending",
+            priority="high",
+            due_date=yesterday,
+        )
+
+        self.client.force_login(self.user)
+
+    def test_filter_high_priority(self):
+        response = self.client.get(
+            reverse("task_list"),
+            {"priority": "high"},
+        )
+
+        titles = [
+            task.title for task in response.context["page_obj"]
+        ]
+
+        self.assertEqual(titles, ["Urgent Report"])
+
+    def test_filter_overdue(self):
+        response = self.client.get(
+            reverse("task_list"),
+            {"overdue": "1"},
+        )
+
+        titles = [
+            task.title for task in response.context["page_obj"]
+        ]
+
+        self.assertEqual(titles, ["Urgent Report"])
+
+    def test_combined_filters(self):
+        response = self.client.get(
+            reverse("task_list"),
+            {
+                "search": "Urgent",
+                "status": "pending",
+                "priority": "high",
+                "overdue": "1",
+            },
+        )
+
+        self.assertEqual(
+            response.context["page_obj"].paginator.count,
+            1,
+        )
+
+    def test_sort_by_deadline(self):
+        response = self.client.get(
+            reverse("task_list"),
+            {"sort": "deadline"},
+        )
+
+        titles = [
+            task.title for task in response.context["page_obj"]
+        ]
+
+        self.assertEqual(
+            titles,
+            ["Urgent Report", "Documentation", "No Deadline Task"],
+        )
+
+class TaskQuickStatusTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="quick_user",
+            password="testpass123",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="quick_other",
+            password="testpass123",
+        )
+
+        self.task = Task.objects.create(
+            user=self.user,
+            title="Quick Action Task",
+            status=Task.Status.PENDING,
+            completed=False,
+        )
+
+        self.url = reverse(
+            "task_quick_status",
+            args=[self.task.pk],
+        )
+
+        self.client.force_login(self.user)
+
+    def test_full_task_workflow(self):
+        transitions = [
+            (Task.Status.IN_PROGRESS, False),
+            (Task.Status.COMPLETED, True),
+            (Task.Status.PENDING, False),
+        ]
+
+        for new_status, expected_completed in transitions:
+            response = self.client.post(
+                self.url,
+                {"status": new_status},
+            )
+
+            self.assertEqual(response.status_code, 302)
+
+            self.task.refresh_from_db()
+
+            self.assertEqual(
+                self.task.status,
+                new_status,
+            )
+
+            self.assertEqual(
+                self.task.completed,
+                expected_completed,
+            )
+
+    def test_invalid_transition(self):
+        response = self.client.post(
+            self.url,
+            {"status": Task.Status.COMPLETED},
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.status,
+            Task.Status.PENDING,
+        )
+
+    def test_other_user_cannot_update_task(self):
+        self.client.force_login(self.other_user)
+
+        response = self.client.post(
+            self.url,
+            {"status": Task.Status.IN_PROGRESS},
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.status,
+            Task.Status.PENDING,
+        )
+
+    def test_get_request_is_not_allowed(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 405)
+
+    def test_redirect_preserves_filters(self):
+        previous_page = (
+            reverse("task_list")
+            + "?priority=high&sort=deadline&page=2"
+        )
+
+        response = self.client.post(
+            self.url,
+            {
+                "status": Task.Status.IN_PROGRESS,
+                "next": previous_page,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            previous_page,
+        )
+class TaskStatusSyncTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="sync_user",
+            password="testpass123",
+        )
+
+        self.task = Task.objects.create(
+            user=self.user,
+            title="Status Sync Task",
+            status=Task.Status.PENDING,
+        )
+
+    def test_completed_syncs_with_status(self):
+        self.task.status = Task.Status.COMPLETED
+        self.task.save(update_fields=["status"])
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.status,
+            Task.Status.COMPLETED,
+        )
+
+        self.assertTrue(self.task.completed)
+
+    def test_reopening_task_resets_completed(self):
+        self.task.status = Task.Status.COMPLETED
+        self.task.save()
+
+        self.task.status = Task.Status.IN_PROGRESS
+        self.task.save(update_fields=["status"])
+
+        self.task.refresh_from_db()
+
+        self.assertFalse(self.task.completed)
+
+    def test_model_corrects_inconsistent_data(self):
+        self.task.status = Task.Status.PENDING
+        self.task.completed = True
+
+        self.task.save()
+        self.task.refresh_from_db()
+
+        self.assertFalse(self.task.completed)
+class KanbanBoardTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="kanban_user",
+            password="testpass123",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="kanban_other",
+            password="testpass123",
+        )
+
+        for status_value in Task.Status.values:
+            Task.objects.create(
+                user=self.user,
+                title=f"My {status_value} task",
+                status=status_value,
+            )
+
+        Task.objects.create(
+            user=self.other_user,
+            title="Private other task",
+            status=Task.Status.PENDING,
+        )
+
+        self.url = reverse("kanban_board")
+
+    def test_requires_login(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_board_groups_tasks_correctly(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        columns = response.context["columns"]
+
+        self.assertEqual(len(columns), 3)
+
+        for column in columns:
+            self.assertEqual(
+                len(column["tasks"]),
+                1,
+            )
+
+            task = column["tasks"][0]
+
+            self.assertEqual(
+                task.status,
+                column["key"],
+            )
+
+    def test_other_user_tasks_are_hidden(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.url)
+
+        self.assertNotContains(
+            response,
+            "Private other task",
+        )
+class KanbanMoveTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="kanban_move_user",
+            password="testpass123",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="kanban_move_other",
+            password="testpass123",
+        )
+
+        self.task = Task.objects.create(
+            user=self.user,
+            title="Drag Test Task",
+            status=Task.Status.PENDING,
+            completed=False,
+        )
+
+        self.url = reverse(
+            "kanban_move_task",
+            args=[self.task.pk],
+        )
+
+        self.client.force_login(self.user)
+
+    def test_move_to_completed(self):
+        response = self.client.post(
+            self.url,
+            {"status": Task.Status.COMPLETED},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.status,
+            Task.Status.COMPLETED,
+        )
+
+        self.assertTrue(self.task.completed)
+
+    def test_move_back_to_pending(self):
+        self.task.status = Task.Status.COMPLETED
+        self.task.save()
+
+        response = self.client.post(
+            self.url,
+            {"status": Task.Status.PENDING},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.status,
+            Task.Status.PENDING,
+        )
+
+        self.assertFalse(self.task.completed)
+
+    def test_invalid_status(self):
+        response = self.client.post(
+            self.url,
+            {"status": "unknown"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.task.refresh_from_db()
+
+        self.assertEqual(
+            self.task.status,
+            Task.Status.PENDING,
+        )
+
+    def test_other_user_cannot_move_task(self):
+        self.client.force_login(self.other_user)
+
+        response = self.client.post(
+            self.url,
+            {"status": Task.Status.COMPLETED},
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+        self.task.refresh_from_db()
+        self.assertEqual(
+            self.task.status,
+            Task.Status.PENDING,
+        )
+
+    def test_get_is_not_allowed(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 405)

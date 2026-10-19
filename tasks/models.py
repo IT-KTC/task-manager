@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 # Create your models here.
 
@@ -13,6 +14,8 @@ class TaskQuerySet(models.QuerySet):
         return self.filter(user = user)
     def recent(self):
         return self.order_by("-created_at")
+
+
 
 class Task(models.Model):
     title= models.CharField(max_length=200)
@@ -44,6 +47,47 @@ class Task(models.Model):
         IN_PROGRESS = "in_progress", "In Progress"
         COMPLETED = "completed", "Completed"
     status= models.CharField(max_length=20,choices=Status.choices,default=Status.PENDING )
+    class Priority(models.TextChoices):
+        LOW = "low", "Low"
+        MEDIUM = "medium", "Medium"
+        HIGH = "high", "High"
+    priority = models.CharField(
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.MEDIUM,
+    )
+
+    due_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+    @property
+    def is_overdue(self):
+        if self.due_date is None:
+            return False
+
+        if self.status == self.Status.COMPLETED:
+            return False
+
+        return self.due_date < timezone.localdate()
+    def save(self, *args, **kwargs):
+   
+        self.completed = (
+            self.status == self.Status.COMPLETED
+        )
+
+   
+        update_fields = kwargs.get("update_fields")
+
+        if update_fields is not None:
+            fields = set(update_fields)
+
+            if "status" in fields or "completed" in fields:
+                fields.add("completed")
+
+            kwargs["update_fields"] = fields
+
+        super().save(*args, **kwargs)
     class Meta: 
         indexes = [  # noqa: RUF012
             models.Index(

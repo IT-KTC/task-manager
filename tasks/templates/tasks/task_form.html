@@ -1,47 +1,161 @@
+
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
+{% if task %}Edit Task{% else %}Create Task{% endif %}
+{% endblock %}
 
-{% if task %}
-Edit Task
-{% else %}
-Create Task
-{% endif %}
-
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task_form.css' %}">
 {% endblock %}
 
 {% block content %}
+<div class="tf-page">
 
-{% if task %}
+    <nav class="tf-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'task_list' %}">My Tasks</a>
+        <span>/</span>
+        <span>
+            {% if task %}Edit Task{% else %}Create Task{% endif %}
+        </span>
+    </nav>
 
-<h1>Edit Task</h1>
+    <header class="tf-banner">
+        <div class="tf-banner__content">
+            <span class="tf-eyebrow">TASK MANAGEMENT</span>
 
-{% else %}
+            {% if task %}
+                <h1>Edit Task</h1>
+                <p>
+                    Update the information and progress of your task.
+                </p>
+            {% else %}
+                <h1>Create a New Task</h1>
+                <p>
+                    Organize your work, set priorities,
+                    and keep track of deadlines.
+                </p>
+            {% endif %}
+        </div>
 
-<h1>Create Task</h1>
+        <div class="tf-banner__symbol" aria-hidden="true">✓</div>
+    </header>
 
-{% endif %}
+    <section class="tf-card">
 
-<form method="POST" enctype="multipart/form-data">
+        <div class="tf-card__header">
+            <div class="tf-heading-icon" aria-hidden="true">✎</div>
 
-    {% csrf_token %}
+            <div>
+                <h2>Task Information</h2>
+                <p>Fill in the details below to manage your task.</p>
+            </div>
+        </div>
 
-    {{ form.as_p }}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
 
-    <button type="submit">
+            {% if form.non_field_errors %}
+                <div class="tf-error-summary" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
 
-        {% if task %}
-        Update Task
-        {% else %}
-        Create Task
-        {% endif %}
+            <div class="tf-grid">
 
-    </button>
+                {% for field in form %}
 
-</form>
+                    {% if field.is_hidden %}
+                        {{ field }}
+                    {% else %}
 
-<a href="{% url 'task_list' %}">
-    Cancel
-</a>
+                        <div class="tf-field
+                            {% if field.name == 'title' or field.name == 'description' or field.name == 'attachment' or field.name == 'image' %}tf-field--wide{% endif %}
+                            {% if field.errors %}tf-field--invalid{% endif %}
+                        ">
 
+                            {% if field.field.widget.input_type == 'checkbox' %}
+                                <div class="tf-checkbox">
+                                    {{ field }}
+                                    {{ field.label_tag }}
+                                </div>
+                            {% else %}
+
+                                <div class="tf-label">
+                                    {{ field.label_tag }}
+
+                                    {% if field.field.required %}
+                                        <span class="tf-required">*</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tf-control">
+                                    {{ field }}
+                                </div>
+
+                            {% endif %}
+
+                            {% if field.help_text %}
+                                <div class="tf-help">
+                                    {{ field.help_text }}
+                                </div>
+                            {% endif %}
+
+                            {% if field.errors %}
+                                <div class="tf-errors" role="alert">
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
+                {% endfor %}
+
+            </div>
+
+            {% if task %}
+                {% if task.image or task.attachment %}
+                    <div class="tf-existing">
+                        <h3>Current files</h3>
+
+                        {% if task.image %}
+                            <a href="{% url 'task_image' task.pk %}" target="_blank" rel="noopener noreferrer">
+                                View current image ↗
+                            </a>
+                        {% endif %}
+
+                        {% if task.attachment %}
+                            <a href="{% url 'task_download' task.pk %}">
+                                Download current attachment ↓
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            <div class="tf-actions">
+                <a href="{% url 'task_list' %}" class="tf-btn tf-btn--cancel">
+                    Cancel
+                </a>
+
+                <button type="submit" class="tf-btn tf-btn--save">
+                    {% if task %}
+                        Save Changes →
+                    {% else %}
+                        Create Task →
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+
+    </section>
+
+    <p class="tf-bottom-note">
+        Your tasks are private and visible only to your account.
+    </p>
+
+</div>
 {% endblock %}

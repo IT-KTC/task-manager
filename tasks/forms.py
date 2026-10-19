@@ -9,14 +9,21 @@ from .models import Task
 class TaskForm(forms.ModelForm):
     class Meta: 
         model = Task 
-        fields = [
+        fields = [  # noqa: RUF012
             "title",
             "description",
             "status",
-            "completed",
+            "priority",
+            "due_date",
             "attachment",
-            "image"
+            "image",
         ]
+        widgets = {  # noqa: RUF012
+            "due_date": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"type": "date"},
+            ),
+        }
     def clean_image(self):
         image = self.cleaned_data.get("image")
 

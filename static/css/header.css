@@ -1,180 +1,280 @@
 /* Task Manager global header - all selectors namespaced with tm- */
 .tm-header {
-    background: #101a30;
-    color: #fff;
-    border-bottom: 1px solid rgba(255, 255, 255, .10);
-    box-shadow: 0 7px 22px rgba(15, 23, 42, .12);
-    position: relative;
-    z-index: 50;
+  background: #101a30;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 7px 22px rgba(15, 23, 42, 0.12);
+  position: relative;
+  z-index: 50;
 }
 
 .tm-header__inner {
-    width: min(1200px, calc(100% - 48px));
-    min-height: 78px;
-    margin-inline: auto;
-    display: flex;
-    align-items: center;
-    gap: 36px;
+  width: min(1200px, calc(100% - 48px));
+  min-height: 78px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: 36px;
 }
 
 .tm-header .tm-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    color: white;
-    text-decoration: none;
-    white-space: nowrap;
-    margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  text-decoration: none;
+  white-space: nowrap;
+  margin: 0;
 }
 
 .tm-brand__icon {
-    width: 38px;
-    height: 38px;
-    display: inline-grid;
-    place-items: center;
-    border-radius: 12px;
-    font-weight: 900;
-    font-size: 22px;
-    background: linear-gradient(135deg, #5d54ed, #9684ff);
-    box-shadow: 0 5px 16px rgba(100, 86, 240, .28);
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 22px;
+  background: linear-gradient(135deg, #5d54ed, #9684ff);
+  box-shadow: 0 5px 16px rgba(100, 86, 240, 0.28);
 }
 
 .tm-brand__label {
-    font-size: 19px;
-    font-weight: 800;
-    letter-spacing: -.5px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
-.tm-brand__label span { color: #a8b3ff; }
+.tm-brand__label span {
+  color: #a8b3ff;
+}
 
 .tm-header .tm-nav {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    padding: 0;
-    background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  padding: 0;
+  background: transparent;
 }
 
 .tm-header .tm-nav__link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 41px;
-    padding: 0 15px;
-    border-radius: 10px;
-    color: #c8d2e4;
-    font-weight: 600;
-    font-size: 14px;
-    text-decoration: none;
-    margin: 0;
-    white-space: nowrap;
-    transition: background .15s ease, color .15s ease;
+  display: inline-flex;
+  align-items: center;
+  min-height: 41px;
+  padding: 0 15px;
+  border-radius: 10px;
+  color: #c8d2e4;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  margin: 0;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .tm-header .tm-nav__link:hover,
 .tm-header .tm-nav__link.is-active {
-    background: rgba(125, 113, 253, .18);
-    color: #fff;
+  background: rgba(125, 113, 253, 0.18);
+  color: #fff;
 }
 
-.tm-header__actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-.tm-user-menu { position: relative; }
+.tm-header__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tm-user-menu {
+  position: relative;
+}
 .tm-user-menu__trigger {
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid rgba(255,255,255,.13);
-    border-radius: 12px;
-    padding: 7px 11px 7px 7px;
-    cursor: pointer;
-    background: rgba(255,255,255,.055);
-    min-height: 43px;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 12px;
+  padding: 7px 11px 7px 7px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.055);
+  min-height: 43px;
 }
-.tm-user-menu__trigger::-webkit-details-marker { display: none; }
-.tm-user-menu__trigger:hover, .tm-user-menu[open] .tm-user-menu__trigger { background: rgba(255,255,255,.10); }
+.tm-user-menu__trigger::-webkit-details-marker {
+  display: none;
+}
+.tm-user-menu__trigger:hover,
+.tm-user-menu[open] .tm-user-menu__trigger {
+  background: rgba(255, 255, 255, 0.1);
+}
 .tm-user-menu__avatar {
-    width: 34px;
-    height: 34px;
-    display: inline-grid;
-    place-items: center;
-    border-radius: 10px;
-    color: white;
-    background: #6657ee;
-    font-weight: 800;
-    flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 10px;
+  color: white;
+  background: #6657ee;
+  font-weight: 800;
+  flex: 0 0 auto;
 }
-.tm-user-menu__identity { display: grid; gap: 1px; text-align: left; }
-.tm-user-menu__name { font-size: 13px; font-weight: 700; color: white; }
-.tm-user-menu__subtitle { font-size: 11px; color: #a8b6d0; }
-.tm-user-menu__chevron { color: #b5bed3; margin-left: 4px; }
+.tm-user-menu__identity {
+  display: grid;
+  gap: 1px;
+  text-align: left;
+}
+.tm-user-menu__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+}
+.tm-user-menu__subtitle {
+  font-size: 11px;
+  color: #a8b6d0;
+}
+.tm-user-menu__chevron {
+  color: #b5bed3;
+  margin-left: 4px;
+}
 .tm-user-menu__dropdown {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    width: 220px;
-    padding: 12px;
-    background: white;
-    color: #1a2540;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    box-shadow: 0 20px 45px rgba(15,23,42,.20);
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 220px;
+  padding: 12px;
+  background: white;
+  color: #1a2540;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
 }
-.tm-user-menu__greeting { margin: 3px 5px 13px; font-size: 13px; color: #64748b; }
-.tm-user-menu__greeting strong { color: #1e293b; }
-.tm-user-menu__dropdown form { margin: 0; }
+.tm-user-menu__greeting {
+  margin: 3px 5px 13px;
+  font-size: 13px;
+  color: #64748b;
+}
+.tm-user-menu__greeting strong {
+  color: #1e293b;
+}
+.tm-user-menu__dropdown form {
+  margin: 0;
+}
 .tm-user-menu__logout {
-    width: 100%;
-    padding: 11px 13px;
-    border: 1px solid #fee2e2;
-    border-radius: 9px;
-    background: #fff5f5;
-    color: #c62828;
-    font: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    text-align: left;
-    cursor: pointer;
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid #fee2e2;
+  border-radius: 9px;
+  background: #fff5f5;
+  color: #c62828;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
 }
-.tm-user-menu__logout:hover { background: #fee2e2; }
-.tm-header .tm-auth-link { color: #e2e8f0; font-weight: 600; font-size: 14px; text-decoration: none; margin: 0; }
+.tm-user-menu__logout:hover {
+  background: #fee2e2;
+}
+.tm-header .tm-auth-link {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  margin: 0;
+}
 .tm-header .tm-auth-button {
-    background: #6756ef;
-    color: #fff;
-    padding: 11px 17px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 700;
-    margin: 0;
+  background: #6756ef;
+  color: #fff;
+  padding: 11px 17px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
 }
-.tm-auth-button:hover { background: #5544df; }
-.tm-header a:focus-visible, .tm-header button:focus-visible, .tm-user-menu__trigger:focus-visible {
-    outline: 3px solid #c5bbff;
-    outline-offset: 3px;
+.tm-auth-button:hover {
+  background: #5544df;
+}
+.tm-header a:focus-visible,
+.tm-header button:focus-visible,
+.tm-user-menu__trigger:focus-visible {
+  outline: 3px solid #c5bbff;
+  outline-offset: 3px;
 }
 
-.tm-alerts { width: min(1200px, calc(100% - 48px)); margin: 16px auto 0; }
-.tm-alert {
-    background: #eef2ff;
-    color: #3730a3;
-    border: 1px solid #c7d2fe;
-    border-radius: 10px;
-    padding: 12px 15px;
-    font-size: 14px;
-    margin-bottom: 8px;
+.tm-alerts {
+  width: min(1200px, calc(100% - 48px));
+  margin: 16px auto 0;
 }
-.tm-alert--success { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
-.tm-alert--error { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+.tm-alert {
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  padding: 12px 15px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.tm-alert--success {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+.tm-alert--error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
 
 @media (max-width: 760px) {
-    .tm-header__inner { width: calc(100% - 28px); gap: 10px; padding-block: 12px; flex-wrap: wrap; }
-    .tm-brand__label { font-size: 17px; }
-    .tm-header__actions { margin-left: auto; }
-    .tm-header .tm-nav { order: 3; flex: 0 0 100%; overflow-x: auto; padding-top: 5px; }
-    .tm-header .tm-nav__link { padding: 0 12px; }
-    .tm-user-menu__identity, .tm-user-menu__chevron { display: none; }
-    .tm-user-menu__trigger { padding: 5px; }
-    .tm-user-menu__dropdown { right: 0; }
-    .tm-alerts { width: calc(100% - 28px); }
+  .tm-header__inner {
+    width: calc(100% - 28px);
+    gap: 10px;
+    padding-block: 12px;
+    flex-wrap: wrap;
+  }
+  .tm-brand__label {
+    font-size: 17px;
+  }
+  .tm-header__actions {
+    margin-left: auto;
+  }
+  .tm-header .tm-nav {
+    order: 3;
+    flex: 0 0 100%;
+    overflow-x: auto;
+    padding-top: 5px;
+  }
+  .tm-header .tm-nav__link {
+    padding: 0 12px;
+  }
+  .tm-user-menu__identity,
+  .tm-user-menu__chevron {
+    display: none;
+  }
+  .tm-user-menu__trigger {
+    padding: 5px;
+  }
+  .tm-user-menu__dropdown {
+    right: 0;
+  }
+  .tm-alerts {
+    width: calc(100% - 28px);
+  }
+}
+/* Highlight trang đang được chọn */
+
+.tm-header
+  .tm-nav[data-active="dashboard"]
+  .tm-nav__link[data-page="dashboard"],
+.tm-header
+  .tm-nav[data-active="task_list"]
+  .tm-nav__link[data-page="task_list"],
+.tm-header
+  .tm-nav[data-active="task_create"]
+  .tm-nav__link[data-page="task_create"] {
+  background: rgba(125, 113, 253, 0.18);
+  color: #ffffff;
 }
