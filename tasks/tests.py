@@ -660,9 +660,19 @@ class PrivateTaskMediaTests(TestCase):
             response = self.client.get(
                 reverse(name, args=[self.task.pk])
             )
-            self.assertEqual(response.status_code, 200)
-            response.close()
 
+            self.assertEqual(
+                response.status_code,
+                200,
+            )
+
+            self.assertTrue(response.streaming)
+
+            content = b"".join(
+                response.streaming_content
+            )
+
+            self.assertGreater(len(content), 0)
     def test_other_user_cannot_access_media(self):
         self.client.force_login(self.other_user)
 
@@ -789,4 +799,20 @@ class TaskAPISecurityTests(APITestCase):
         self.assertEqual(
             created_task.user,
             self.owner,
+        )
+class SessionConnectionTests(TestCase):
+
+    def test_force_login(self):
+        User = get_user_model()
+
+        user = User.objects.create_user(
+            username="session_test",
+            password="testpass123",
+        )
+
+        self.client.force_login(user)
+
+        self.assertEqual(
+            int(self.client.session["_auth_user_id"]),
+            user.pk,
         )

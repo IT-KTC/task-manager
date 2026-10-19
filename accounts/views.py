@@ -1,7 +1,9 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import login,logout
 from django.contrib import messages
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.shortcuts import redirect, render
+
+from .security import login_rate_limit
 
 # Create your views here.
 
@@ -19,6 +21,7 @@ def logout_view(request):
         )
 
         return redirect("login")
+@login_rate_limit
 def login_view(request):
     if request.method == "POST": 
         form = AuthenticationForm(request, data=request.POST)
