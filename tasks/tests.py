@@ -1464,3 +1464,79 @@ class KanbanMoveTests(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 405)
+class TaskDualUploadTests(TestCase):
+
+    def setUp(self):
+        self.temp_dir = TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+
+        media_override = override_settings(
+            MEDIA_ROOT=self.temp_dir.name
+        )
+        media_override.enable()
+        self.addCleanup(media_override.disable)
+
+        self.user = User.objects.create_user(
+            username="dual_upload_user",
+            password="testpass123",
+        )
+
+        self.client.force_login(self.user)
+
+    def test_create_task_with_image_and_attachment(self):
+        buffer = BytesIO()
+
+        Image.new(
+            "RGB",
+            (100, 100),
+        ).save(buffer, format="PNG")
+
+        image = SimpleUploadedFile(
+            "test_image.png",
+            buffer.getvalue(),
+            content_type="image/png",
+        )
+
+        attachment = SimpleUploadedFile(
+            "test_document.pdf",
+            b"%PDF-1.4\nTest document",
+            content_type="application/pdf",
+        )
+
+        response = self.client.post(
+            reverse("task_create"),
+            {
+                "title": "Dual Upload Test",
+                "description": "Testing two uploads",
+                "status": Task.Status.PENDING,
+                "priority": Task.Priority.MEDIUM,
+                "image": image,
+                "attachment": attachment,
+            },
+        )
+
+        if response.status_code == 200:
+            print(response.context["form"].errors)
+
+        self.assertRedirects(
+            response,
+            reverse("task_list"),
+        )
+
+        task = Task.objects.get(
+            title="Dual Upload Test",
+            user=self.user,
+        )
+
+        self.assertTrue(task.image.name)
+        self.assertTrue(task.attachment.name)
+
+        self.assertTrue(
+            task.image.storage.exists(task.image.name)
+        )
+
+        self.assertTrue(
+            task.attachment.storage.exists(
+                task.attachment.name
+            )
+        )
