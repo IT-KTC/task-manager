@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from accounts.security import login_rate_limit
 router = DefaultRouter()
 router.register(
     "tasks",
@@ -17,7 +18,7 @@ router.register(
 urlpatterns = router.urls + [
     path(
         "token/",
-        TokenObtainPairView.as_view(),
+        login_rate_limit(TokenObtainPairView.as_view()),
         name="token_obtain_pair",
     ),
 

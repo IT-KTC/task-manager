@@ -1,9 +1,10 @@
-from django.urls import path, include
+from django.urls import include, path
+
 from . import views
 
 urlpatterns = [
   path("", views.task_list,name="task_list"),
-    path("detail/", views.task_detail, name="task_detail"),
+   
     path("about/", views.task_about, name="task_about"),
     path("mytasks/",views.my_tasks,name="my_tasks"),
     path("create/", views.task_create, name="task_create"),
@@ -11,6 +12,11 @@ urlpatterns = [
     path("<int:pk>/delete/",views.task_delete,name="task_delete"),
     path("<int:pk>/detail/",views.task_detail,name="task_detail"),
     path("<int:pk>/download/",views.task_download,name="task_download"),
+    path(
+    "<int:pk>/image/",
+    views.task_image,
+    name="task_image",
+),
     path("async-test/", views.async_test, name="async_test"),
    
 ]

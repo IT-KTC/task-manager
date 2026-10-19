@@ -39,10 +39,36 @@ services:
 
     environment:
       DB_HOST: db
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  celery:
+    build: .
+
+    command: >
+      celery -A task_manager worker
+      --loglevel=INFO
+      --concurrency=1
+
+    volumes:
+      - .:/app
+
+    env_file:
+      - .env
+
+    environment:
+      DB_HOST: db
+      CELERY_BROKER_URL: redis://redis:6379/0
 
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
+    restart: unless-stopped
 volumes:
   postgres_data:

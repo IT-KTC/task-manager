@@ -181,9 +181,8 @@ my tasks
             first
         </a>
 
-        <a
-            href="?search={{ search }}&status={{ status }}&page={{ page_obj.previous_page_number }}">
-            previous
+        <a href="{% querystring page=page_obj.previous_page_number %}">
+            Previous
         </a>
 
         {% endif %}
@@ -195,9 +194,8 @@ my tasks
 
         {% if page_obj.has_next %}
 
-        <a
-            href="?search={{ search }}&status={{ status }}&page={{ page_obj.next_page_number }}">
-            next
+        <a href="{% querystring page=page_obj.next_page_number %}">
+            Next
         </a>
 
         <a

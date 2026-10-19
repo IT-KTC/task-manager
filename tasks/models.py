@@ -1,5 +1,6 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+
 # Create your models here.
 
 
@@ -16,7 +17,7 @@ class TaskQuerySet(models.QuerySet):
 class Task(models.Model):
     title= models.CharField(max_length=200)
     description= models.TextField(blank=True)
-    status= models.CharField(max_length=20,default="pending" )
+   
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -27,8 +28,7 @@ class Task(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="tasks",
-        null=True,
-        blank=True,
+       
     )
     attachment = models.FileField(
         upload_to="task_attachments/",
@@ -39,14 +39,19 @@ class Task(models.Model):
         blank = True,
         null = True
     )
-class Meta: 
-    indexes = [
-        models.Index(
-            fields=[
-                "user",
-                "status",
-                "-created_at"
-            ],
-            name="task_user_status_created_idx",
-        )
-    ]
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        IN_PROGRESS = "in_progress", "In Progress"
+        COMPLETED = "completed", "Completed"
+    status= models.CharField(max_length=20,choices=Status.choices,default=Status.PENDING )
+    class Meta: 
+        indexes = [  # noqa: RUF012
+            models.Index(
+                fields=[
+                    "user",
+                    "status",
+                    "-created_at"
+                ],
+                name="task_user_status_created_idx",
+            )
+        ]
