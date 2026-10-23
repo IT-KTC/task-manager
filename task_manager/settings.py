@@ -55,7 +55,8 @@ INSTALLED_APPS = [
 
     "rest_framework.authtoken",
     "tasks",
-    "accounts"
+    "accounts",
+    "admin_panel"
 
 
 ]

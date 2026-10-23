@@ -31,7 +31,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("tasks/", include("tasks.urls")),
     path("accounts/", include("accounts.urls")), 
-    path("api/", include("tasks.api_urls"))
+    path("api/", include("tasks.api_urls")),
+    path("management/", include("admin_panel.urls")),
 ]
 if settings.DEBUG: 
     urlpatterns += static(
