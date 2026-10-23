@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin_panel/admin.css' %}">
+{% endblock %}
+{% block content %}
+<div class="ap-shell">
+  <div class="ap-top">
+    <div><span class="ap-eyebrow">TASK MANAGER · QUẢN TRỊ</span><h1>{% block ap_title %}Quản trị hệ thống{% endblock %}</h1></div>
+    <a class="ap-default-admin" href="{% url 'admin:index' %}">Django Admin ↗</a>
+  </div>
+  <nav class="ap-nav" aria-label="Menu quản trị">
+    <a href="{% url 'admin_dashboard' %}">Tổng quan</a>
+    <a href="{% url 'admin_users' %}">Người dùng</a>
+    <a href="{% url 'admin:auth_user_changelist' %}">Quản lý tài khoản ↗</a>
+    <a href="{% url 'admin:tasks_task_changelist' %}">Quản lý Task ↗</a>
+  </nav>
+  {% block ap_content %}{% endblock %}
+</div>
+{% endblock %}

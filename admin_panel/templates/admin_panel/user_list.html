@@ -1,0 +1,22 @@
+{% extends 'admin_panel/layout.html' %}
+{% block title %}Người dùng | Task Manager Admin{% endblock %}
+{% block ap_title %}Quản lý người dùng{% endblock %}
+{% block ap_content %}
+<section class="ap-section">
+<form method="get" class="ap-filters">
+  <label>Tìm tài khoản<input type="search" name="q" value="{{ keyword }}" placeholder="Username, email, họ tên"></label>
+  <label>Trạng thái<select name="state"><option value="all" {% if state == 'all' %}selected{% endif %}>Tất cả</option><option value="active" {% if state == 'active' %}selected{% endif %}>Hoạt động</option><option value="inactive" {% if state == 'inactive' %}selected{% endif %}>Vô hiệu hóa</option><option value="staff" {% if state == 'staff' %}selected{% endif %}>Staff</option></select></label>
+  <button type="submit">Lọc</button>
+</form>
+<div class="ap-table-wrap"><table class="ap-table"><thead><tr><th>Tài khoản</th><th>Họ tên</th><th>Email</th><th>Quyền</th><th>Trạng thái</th><th>Số Task</th><th>Ngày tham gia</th></tr></thead><tbody>
+{% for member in page_obj %}<tr>
+  <td><a href="{% url 'admin_user_detail' member.pk %}">{{ member.username }}</a></td>
+  <td>{{ member.get_full_name|default:'—' }}</td><td>{{ member.email|default:'—' }}</td>
+  <td>{% if member.is_superuser %}Superuser{% elif member.is_staff %}Staff{% else %}User{% endif %}</td>
+  <td>{% if member.is_active %}<span class="ap-pill good">Hoạt động</span>{% else %}<span class="ap-pill muted">Vô hiệu hóa</span>{% endif %}</td>
+  <td>{{ member.task_total }}</td><td>{{ member.date_joined|date:'d/m/Y' }}</td>
+</tr>{% empty %}<tr><td colspan="7">Không tìm thấy tài khoản phù hợp.</td></tr>{% endfor %}
+</tbody></table></div>
+{% include 'admin_panel/_pager.html' %}
+</section>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'admin_panel/layout.html' %}
+{% block title %}{{ member.username }} | Task Manager Admin{% endblock %}
+{% block ap_title %}Chi tiết tài khoản: {{ member.username }}{% endblock %}
+{% block ap_content %}
+<p class="ap-intro"><a href="{% url 'admin_users' %}">← Danh sách người dùng</a> · <a href="{% url 'admin:auth_user_change' member.pk %}">Chỉnh sửa trong Django Admin ↗</a></p>
+<section class="ap-section"><h2>Thông tin tài khoản hiện có</h2>
+  <dl class="ap-profile">
+    <div><dt>ID</dt><dd>{{ member.pk }}</dd></div><div><dt>Username</dt><dd>{{ member.username }}</dd></div>
+    <div><dt>Họ tên</dt><dd>{{ member.get_full_name|default:'—' }}</dd></div><div><dt>Email</dt><dd>{{ member.email|default:'—' }}</dd></div>
+    <div><dt>Active</dt><dd>{{ member.is_active|yesno:'Có,Không' }}</dd></div><div><dt>Staff</dt><dd>{{ member.is_staff|yesno:'Có,Không' }}</dd></div>
+    <div><dt>Superuser</dt><dd>{{ member.is_superuser|yesno:'Có,Không' }}</dd></div><div><dt>Ngày tạo</dt><dd>{{ member.date_joined|date:'d/m/Y H:i' }}</dd></div>
+    <div><dt>Đăng nhập gần nhất</dt><dd>{% if member.last_login %}{{ member.last_login|date:'d/m/Y H:i' }}{% else %}Chưa ghi nhận{% endif %}</dd></div>
+  </dl>
+  <div class="ap-access"><div><strong>Nhóm quyền (Groups)</strong><ul>{% for group in member.groups.all %}<li>{{ group.name }}</li>{% empty %}<li>Chưa được gán nhóm</li>{% endfor %}</ul></div><div><strong>Quyền được gán trực tiếp</strong><ul>{% for perm in member.user_permissions.all %}<li>{{ perm.content_type.app_label }}.{{ perm.codename }}</li>{% empty %}<li>Không có quyền gán trực tiếp</li>{% endfor %}</ul></div></div>
+  <p class="ap-note">Không hiển thị mật khẩu/mã băm. Dự án hiện chưa có model hồ sơ mở rộng cho số điện thoại và ảnh đại diện.</p>
+</section>
+<section class="ap-section"><h2>Thống kê Task của {{ member.username }}</h2>
+  <div class="ap-stats">
+    <div class="ap-stat"><span>Tất cả</span><strong>{{ stats.total }}</strong></div>
+    <div class="ap-stat"><span>Chờ</span><strong>{{ stats.pending }}</strong></div>
+    <div class="ap-stat"><span>Đang làm</span><strong>{{ stats.in_progress }}</strong></div>
+    <div class="ap-stat"><span>Đã xong</span><strong>{{ stats.completed }}</strong></div>
+    <div class="ap-stat"><span>Quá hạn</span><strong>{{ stats.overdue }}</strong></div>
+  </div>
+  <div class="ap-table-wrap"><table class="ap-table"><thead><tr><th>ID</th><th>Tiêu đề</th><th>Trạng thái</th><th>Ưu tiên</th><th>Hạn</th><th>Ngày tạo</th></tr></thead><tbody>
+  {% for task in page_obj %}<tr><td>{{ task.pk }}</td><td>{{ task.title }}</td><td>{{ task.get_status_display }}</td><td>{{ task.get_priority_display }}</td><td>{{ task.due_date|date:'d/m/Y'|default:'—' }}</td><td>{{ task.created_at|date:'d/m/Y' }}</td></tr>
+  {% empty %}<tr><td colspan="6">Tài khoản chưa có công việc.</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% include 'admin_panel/_pager.html' %}
+</section>
+{% endblock %}

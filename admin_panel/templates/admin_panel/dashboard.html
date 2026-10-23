@@ -1,0 +1,37 @@
+{% extends 'admin_panel/layout.html' %}
+{% block title %}Admin Dashboard | Task Manager{% endblock %}
+{% block ap_title %}Dashboard quản trị{% endblock %}
+{% block ap_content %}
+<p class="ap-intro">Thống kê toàn bộ người dùng và công việc trong hệ thống.</p>
+<section class="ap-section">
+  <h2>Người dùng</h2>
+  <div class="ap-stats">
+    <div class="ap-stat"><span>Tổng người dùng</span><strong>{{ user_stats.total }}</strong></div>
+    <div class="ap-stat"><span>Đang hoạt động</span><strong>{{ user_stats.active }}</strong></div>
+    <div class="ap-stat"><span>Đã vô hiệu hóa</span><strong>{{ user_stats.inactive }}</strong></div>
+    <div class="ap-stat"><span>Nhân sự quản trị (staff)</span><strong>{{ user_stats.staff }}</strong></div>
+  </div>
+</section>
+<section class="ap-section">
+  <h2>Công việc toàn hệ thống</h2>
+  <div class="ap-stats">
+    <div class="ap-stat"><span>Tổng Task</span><strong>{{ task_stats.total }}</strong></div>
+    <div class="ap-stat"><span>Đang chờ</span><strong>{{ task_stats.pending }}</strong></div>
+    <div class="ap-stat"><span>Đang thực hiện</span><strong>{{ task_stats.in_progress }}</strong></div>
+    <div class="ap-stat"><span>Hoàn thành</span><strong>{{ task_stats.completed }}</strong></div>
+    <div class="ap-stat"><span>Quá hạn</span><strong>{{ task_stats.overdue }}</strong></div>
+  </div>
+</section>
+<div class="ap-two-col">
+  <section class="ap-section"><div class="ap-heading"><h2>Người dùng có nhiều Task</h2><a href="{% url 'admin_users' %}">Xem tất cả →</a></div>
+    <div class="ap-table-wrap"><table class="ap-table"><thead><tr><th>Username</th><th>Họ tên</th><th>Task</th></tr></thead><tbody>
+    {% for member in top_users %}<tr><td><a href="{% url 'admin_user_detail' member.pk %}">{{ member.username }}</a></td><td>{{ member.get_full_name|default:'—' }}</td><td>{{ member.task_total }}</td></tr>{% empty %}<tr><td colspan="3">Chưa có người dùng</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  <section class="ap-section"><h2>Task được tạo gần đây</h2>
+    <div class="ap-table-wrap"><table class="ap-table"><thead><tr><th>Task</th><th>Người sở hữu</th><th>Trạng thái</th></tr></thead><tbody>
+    {% for task in recent_tasks %}<tr><td>{{ task.title }}</td><td><a href="{% url 'admin_user_detail' task.user_id %}">{{ task.user.username }}</a></td><td>{{ task.get_status_display }}</td></tr>{% empty %}<tr><td colspan="3">Chưa có công việc</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}
