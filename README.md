@@ -357,4 +357,3 @@ Tạo Pull Request vào `develop` sau khi đã kiểm thử. **Không commit `.e
 
 ---
 
-**Trạng thái tài liệu:** Đã đối chiếu mã nguồn `IT-KTC/task-manager@afb55ed1` (nhánh `develop`) ngày 23/10/2026. Những fixture tài khoản, các lệnh seed, test mới và `.env.example` được bổ sung bởi gói này, chưa có sẵn trên GitHub cho đến khi bạn tích hợp/push.
