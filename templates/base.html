@@ -68,6 +68,17 @@
                     >
                         Kanban Board
                     </a>
+                    
+                    {% if user.is_authenticated and user.is_active and user.is_superuser %}
+                    <a
+                        href="{% url 'admin_dashboard' %}"
+                        class="tm-nav__link"
+                        data-page="admin_dashboard"
+                    >
+                        Manager
+                    </a>
+                    {% endif %}
+
                 </nav>
 
                 <!-- ================= USER MENU ================= -->

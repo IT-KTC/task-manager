@@ -21,26 +21,39 @@ def logout_view(request):
         )
 
         return redirect("login")
+
 @login_rate_limit
 def login_view(request):
-    if request.method == "POST": 
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid(): 
+    if request.method == "POST":
+        form = AuthenticationForm(
+            request,
+            data=request.POST
+        )
+
+        if form.is_valid():
             user = form.get_user()
-            login(request,user)
+
+            login(request, user)
+
             messages.success(
                 request,
-                "login successfully"
+                "Login successfully!"
             )
+
+        
+            if user.is_active and user.is_superuser:
+                return redirect("admin_dashboard")
+
+    
             return redirect("task_list")
-    else: 
+
+    else:
         form = AuthenticationForm()
+
     return render(
         request,
         "accounts/login.html",
-        {
-            "form": form
-        }
+        {"form": form}
     )
 
 
