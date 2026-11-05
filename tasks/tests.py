@@ -306,7 +306,7 @@ class TeskAPITest(APITestCase):
         )
         Task.objects.create(
             user = self.user,
-            title = "New Task",
+            title = "Tạo công việc",
             status = "pending",
             completed = False
         )
@@ -959,7 +959,7 @@ class DashboardTests(TestCase):
         # Task quá hạn của User hiện tại
         Task.objects.create(
             user=self.user,
-            title="Overdue Task",
+            title="Quá hạn Task",
             status=Task.Status.IN_PROGRESS,
             due_date=yesterday,
         )
@@ -976,7 +976,7 @@ class DashboardTests(TestCase):
         # Task của người khác: không được tính
         Task.objects.create(
             user=self.other_user,
-            title="Other User Overdue",
+            title="Other User Quá hạn",
             status=Task.Status.PENDING,
             due_date=yesterday,
         )
@@ -1013,7 +1013,7 @@ class TaskPriorityDeadlineTests(TestCase):
     def test_overdue_task(self):
         task = Task.objects.create(
             user=self.user,
-            title="Overdue Task",
+            title="Quá hạn Task",
             status=Task.Status.PENDING,
             due_date=timezone.localdate()
             - timedelta(days=1),

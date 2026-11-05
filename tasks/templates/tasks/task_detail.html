@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/task_detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/task_social.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -168,5 +169,6 @@
             </section>
         </aside>
     </div>
+    {% include "tasks/_task_community.html" %}
 </div>
 {% endblock %}

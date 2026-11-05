@@ -223,7 +223,7 @@ docker compose exec web python manage.py seed_demo
 
 Lệnh không tạo thêm 6 User và 8 Task nếu dữ liệu demo đã tồn tại; không xóa dữ liệu, không ghi đè Task và không đổi role/active/password của User có sẵn.
 
-### 6.3. Reset mật khẩu test khi quên
+### 6.3. Đặt lại mật khẩu test khi quên
 
 Sửa `TASK_MANAGER_DEMO_PASSWORD` trong `.env` (rồi **khởi tạo lại container** để đọc env mới nếu cần):
 
@@ -356,4 +356,3 @@ git push -u origin docs/readme-and-demo-seed
 Tạo Pull Request vào `develop` sau khi đã kiểm thử. **Không commit `.env` hoặc password thật.**
 
 ---
-

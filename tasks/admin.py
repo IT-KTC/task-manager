@@ -24,3 +24,6 @@ class TaskAdmin(admin.ModelAdmin):
     ordering = (
         "-created_at",
     )
+    def save_model(self, request, obj, form, change):
+        obj._activity_actor = request.user
+        super().save_model(request, obj, form, change)

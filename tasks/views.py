@@ -21,8 +21,13 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .forms import TaskForm
-from .models import Notification, Task
+from .forms import TaskCommentForm, TaskForm
+from .models import (
+    Notification,
+    Task,
+    TaskActivity,
+    TaskComment,
+)
 from .services import change_task_status, move_task_to_status
 from .tasks import resize_task_image
 
@@ -46,7 +51,7 @@ def task_quick_status(request, pk):
         pk=pk,
         user=request.user,
     )
-
+    task._activity_actor = request.user 
     new_status = request.POST.get("status", "")
 
     try:
@@ -121,7 +126,7 @@ def kanban_move_task(request, pk):
         pk=pk,
         user=request.user,
     )
-
+    task._activity_actor = request.user
     new_status = request.POST.get("status", "")
 
     try:
@@ -395,6 +400,7 @@ def task_create(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
+            task._activity_actor = request.user
             with transaction.atomic():
                 task.save()
                 if task.image: 
@@ -412,6 +418,7 @@ def task_create(request):
 @login_required
 def task_update(request,pk):
     task = get_object_or_404(Task, pk=pk, user = request.user)
+    task._activity_actor = request.user
     if request.method == "POST": 
         form = TaskForm(request.POST, request.FILES,instance=task )
         if form.is_valid(): 
@@ -442,13 +449,56 @@ def task_delete(request,pk):
         "task":task
     }
     return render(request,"tasks/task_confirm_delete.html", context)
+
+
+def _task_community_context(request,task,comment_form=None):
+    comments = task.comments.select_related(
+        "author"
+    ).all()
+
+    comment_page = Paginator(
+        comments,
+        10
+    ).get_page(
+        request.GET.get("comments_page")
+    )
+
+    activity_recent = (
+        task.activities
+        .select_related("actor")
+        .all()[:8]
+    )
+
+    return {
+        "task": task,
+        "comment_form": (
+            comment_form
+            if comment_form is not None
+            else TaskCommentForm()
+        ),
+        "comment_page": comment_page,
+        "activity_recent": activity_recent,
+    }
+
+
 @login_required
 def task_detail(request, pk):
-    task = get_object_or_404(Task, pk = pk,user = request.user)
-    context ={
-        "task": task
-    }
-    return render(request,"tasks/task_detail.html", context )
+    task = get_object_or_404(
+        Task,
+        pk=pk,
+        user=request.user,
+    )
+
+    context = _task_community_context(
+        request,
+        task,
+    )
+
+    return render(
+        request,
+        "tasks/task_detail.html",
+        context,
+    )
 
 @login_required
 def notification_list(request):
@@ -512,3 +562,112 @@ def notification_mark_all_read(request):
     )
 
     return redirect("notification_list")
+
+
+@login_required
+@require_POST
+def task_comment_add(request, pk):
+    task = get_object_or_404(
+        Task,
+        pk=pk,
+        user=request.user,
+    )
+
+    form = TaskCommentForm(request.POST)
+
+    if form.is_valid():
+        with transaction.atomic():
+            comment = form.save(commit=False)
+            comment.task = task
+            comment.author = request.user
+            comment.save()
+
+            TaskActivity.objects.create(
+                task=task,
+                actor=request.user,
+                action=TaskActivity.Action.COMMENT_ADDED,
+                description="Đã thêm một bình luận.",
+            )
+
+        messages.success(
+            request,
+            "Đã thêm bình luận."
+        )
+
+        return redirect("task_detail", pk=task.pk)
+
+    context = _task_community_context(
+        request,
+        task,
+        comment_form=form,
+    )
+
+    return render(
+        request,
+        "tasks/task_detail.html",
+        context,
+        status=400,
+    )
+
+
+@login_required
+@require_POST
+def task_comment_delete(request, pk, comment_id):
+    task = get_object_or_404(
+        Task,
+        pk=pk,
+        user=request.user,
+    )
+
+    comment = get_object_or_404(
+        TaskComment,
+        pk=comment_id,
+        task=task,
+        author=request.user,
+    )
+
+    with transaction.atomic():
+        comment.delete()
+
+        TaskActivity.objects.create(
+            task=task,
+            actor=request.user,
+            action=TaskActivity.Action.COMMENT_DELETED,
+            description="Đã xóa một bình luận.",
+        )
+
+    messages.success(
+        request,
+        "Đã xóa bình luận."
+    )
+
+    return redirect("task_detail", pk=task.pk)
+
+
+@login_required
+def task_timeline(request, pk):
+    task = get_object_or_404(
+        Task,
+        pk=pk,
+        user=request.user,
+    )
+
+    activities = task.activities.select_related(
+        "actor"
+    ).all()
+
+    page_obj = Paginator(
+        activities,
+        20
+    ).get_page(
+        request.GET.get("page")
+    )
+
+    return render(
+        request,
+        "tasks/task_timeline.html",
+        {
+            "task": task,
+            "page_obj": page_obj,
+        },
+    )

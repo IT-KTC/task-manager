@@ -1,0 +1,240 @@
+.tc-page {
+  max-width: 1050px;
+  margin: 36px auto 70px;
+  padding: 0 20px;
+}
+
+.tc-section {
+  margin-top: 28px;
+  padding: 28px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05);
+}
+
+.tc-heading {
+  margin-bottom: 22px;
+}
+
+.tc-heading-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tc-eyebrow {
+  color: #6254e8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.tc-heading h2,
+.tc-section h1 {
+  margin: 8px 0;
+  color: #172442;
+}
+
+.tc-heading p,
+.tc-task-name {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.tc-form {
+  background: #f8faff;
+  border: 1px solid #e5e9f4;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.tc-form label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.tc-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid #dce3ed;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+  background: #fff;
+  color: #172442;
+}
+
+.tc-form textarea:focus {
+  outline: none;
+  border-color: #6254e8;
+  box-shadow: 0 0 0 3px rgba(98, 84, 232, 0.12);
+}
+
+.tc-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.tc-form-actions button {
+  padding: 11px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #594de4;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tc-form-actions button:hover {
+  background: #4338ca;
+}
+
+.tc-error {
+  margin-top: 8px;
+  color: #be123c;
+  font-size: 13px;
+}
+
+.tc-comment {
+  padding: 18px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tc-comment-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tc-comment-avatar {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #6254e8;
+  color: white;
+  font-weight: 800;
+}
+
+.tc-comment-author {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tc-comment-author strong {
+  font-size: 14px;
+  color: #172442;
+}
+
+.tc-comment-author small,
+.tc-event-body small {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.tc-comment-content {
+  margin: 13px 0;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.tc-delete-form button {
+  border: none;
+  background: transparent;
+  color: #dc2626;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.tc-timeline-link,
+.tc-back {
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.tc-back {
+  display: inline-block;
+  margin-bottom: 18px;
+}
+
+.tc-timeline {
+  border-left: 2px solid #e2e8f0;
+  margin-left: 10px;
+  padding-left: 24px;
+}
+
+.tc-event {
+  position: relative;
+  padding: 0 0 24px;
+}
+
+.tc-event-dot {
+  position: absolute;
+  left: -32px;
+  top: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #6254e8;
+  border: 3px solid #eef2ff;
+  box-sizing: content-box;
+}
+
+.tc-event-body strong {
+  color: #172442;
+  font-size: 14px;
+}
+
+.tc-event-body p {
+  margin: 6px 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tc-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.tc-pagination a {
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.tc-empty {
+  color: #64748b;
+  font-size: 14px;
+  padding: 14px 0;
+}
+
+@media (max-width: 650px) {
+  .tc-section {
+    padding: 18px;
+  }
+}

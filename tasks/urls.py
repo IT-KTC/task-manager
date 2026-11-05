@@ -56,5 +56,23 @@ urlpatterns = [
         views.notification_mark_read,
         name="notification_mark_read"
     ),
+    path(
+    "<int:pk>/comments/add/",
+    views.task_comment_add,
+    name="task_comment_add",
+    ),
+
+    path(
+        "<int:pk>/comments/<int:comment_id>/delete/",
+        views.task_comment_delete,
+        name="task_comment_delete",
+    ),
+
+    path(
+        "<int:pk>/timeline/",
+        views.task_timeline,
+        name="task_timeline",
+    ),
+
 
 ]

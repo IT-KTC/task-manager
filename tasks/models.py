@@ -130,3 +130,69 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.message
+
+class TaskComment(models.Model):
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="comments",
+    )
+
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="task_comments",
+    )
+
+    body = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]  # noqa: RUF012
+
+    def __str__(self):
+        return f"Bình luận #{self.pk} - Task #{self.task_id}"
+
+
+class TaskActivity(models.Model):
+    class Action(models.TextChoices):
+        CREATED = "created", "Tạo công việc"
+        UPDATED = "updated", "Cập nhật công việc"
+        STATUS_CHANGED = "status_changed", "Đổi trạng thái"
+        COMMENT_ADDED = "comment_added", "Thêm bình luận"
+        COMMENT_DELETED = "comment_deleted", "Xóa bình luận"
+
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="activities",
+    )
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="task_activities",
+    )
+
+    action = models.CharField(
+        max_length=30,
+        choices=Action.choices,
+    )
+
+    description = models.CharField(max_length=500)
+
+    changed_fields = models.JSONField(
+        default=list,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]  # noqa: RUF012
+
+    def __str__(self):
+        return f"{self.get_action_display()} - Task #{self.task_id}"
