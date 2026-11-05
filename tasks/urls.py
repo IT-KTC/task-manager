@@ -38,4 +38,23 @@ urlpatterns = [
         views.kanban_move_task,
         name="kanban_move_task",
     ),
+    
+    path(
+        "notifications/",
+        views.notification_list,
+        name="notification_list"
+    ),
+
+    path(
+        "notifications/read-all/",
+        views.notification_mark_all_read,
+        name="notification_mark_all_read"
+    ),
+
+    path(
+        "notifications/<int:pk>/read/",
+        views.notification_mark_read,
+        name="notification_mark_read"
+    ),
+
 ]

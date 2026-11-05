@@ -86,6 +86,83 @@
 
                     {% if user.is_authenticated %}
 
+                    <details class="tm-notice-menu">
+
+                        <summary
+                            class="tm-notice-trigger"
+                            aria-label="Mở thông báo"
+                        >
+                            <svg
+                                width="21"
+                                height="21"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                                <path d="M10 21h4"/>
+                            </svg>
+
+                            {% if notification_count > 0 %}
+                                <span class="tm-notice-count">
+                                    {{ notification_count }}
+                                </span>
+                            {% endif %}
+                        </summary>
+
+                        <div class="tm-notice-dropdown">
+
+                            <div class="tm-notice-heading">
+                                <strong>Thông báo</strong>
+
+                                <span>
+                                    {{ notification_count }} chưa đọc
+                                </span>
+                            </div>
+
+                            <div class="tm-notice-items">
+                                {% for notice in notification_recent %}
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'notification_mark_read' notice.pk %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            type="submit"
+                                            class="tm-notice-item {% if not notice.is_read %}tm-notice-unread{% endif %}"
+                                        >
+                                            <span>{{ notice.message }}</span>
+                                            <small>
+                                                {{ notice.created_at|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </button>
+                                    </form>
+
+                                {% empty %}
+
+                                    <p class="tm-notice-empty">
+                                        Chưa có thông báo nào.
+                                    </p>
+
+                                {% endfor %}
+                            </div>
+
+                            <a
+                                class="tm-notice-all"
+                                href="{% url 'notification_list' %}"
+                            >
+                                Xem tất cả thông báo
+                            </a>
+
+                        </div>
+                    </details>
+
                     <!-- Authenticated User -->
                     <details class="tm-user-menu">
 
