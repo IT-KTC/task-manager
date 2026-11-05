@@ -1,0 +1,85 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+Thông báo | Task Manager
+{% endblock %}
+
+{% block content %}
+
+<div style="max-width:850px;margin:35px auto;padding:20px">
+
+    <h1>Thông báo của tôi</h1>
+
+    <form
+        method="post"
+        action="{% url 'notification_mark_all_read' %}"
+        style="margin:20px 0"
+    >
+        {% csrf_token %}
+
+        <button type="submit">
+            Đánh dấu tất cả đã đọc
+        </button>
+    </form>
+
+    {% for notice in page_obj %}
+
+        <form
+            method="post"
+            action="{% url 'notification_mark_read' notice.pk %}"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                style="
+                    display:block;
+                    width:100%;
+                    padding:16px;
+                    margin-bottom:10px;
+                    text-align:left;
+                    border:1px solid #dce3ed;
+                    border-radius:10px;
+                    cursor:pointer;
+                    background:{% if notice.is_read %}white{% else %}#eef2ff{% endif %};
+                "
+            >
+                <strong>
+                    {{ notice.message }}
+                </strong>
+
+                <small style="display:block;margin-top:8px">
+                    {{ notice.created_at|date:"d/m/Y H:i" }}
+                    {% if notice.is_read %}
+                        · Đã đọc
+                    {% else %}
+                        · Chưa đọc
+                    {% endif %}
+                </small>
+            </button>
+        </form>
+
+    {% empty %}
+        <p>Bạn chưa có thông báo nào.</p>
+    {% endfor %}
+
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">
+            Trang trước
+        </a>
+    {% endif %}
+
+    <span>
+        Trang {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">
+            Trang sau
+        </a>
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -10,9 +10,9 @@
 {% block content %}
 <div class="td-page">
     <nav class="td-breadcrumb" aria-label="Breadcrumb">
-        <a href="{% url 'task_list' %}">My tasks</a>
+        <a href="{% url 'task_list' %}">Công việc của tôi</a>
         <span aria-hidden="true">/</span>
-        <span>Task details</span>
+        <span>Chi tiết</span>
     </nav>
 
     <section class="td-hero" aria-labelledby="td-task-title">
@@ -54,7 +54,7 @@
                     <div class="td-card__heading-icon"
                         aria-hidden="true">≡</div>
                     <div>
-                        <h2 id="td-description-title">Description</h2>
+                        <h2 id="td-description-title">Mô tả</h2>
                         <p>Information about this task</p>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
                     <div class="td-card__heading-icon"
                         aria-hidden="true">▧</div>
                     <div>
-                        <h2 id="td-image-title">Task image</h2>
+                        <h2 id="td-image-title">Ảnh</h2>
                         <p>Image attached to this task</p>
                     </div>
                 </div>
@@ -94,7 +94,7 @@
                     <div class="td-card__heading-icon"
                         aria-hidden="true">↧</div>
                     <div>
-                        <h2 id="td-attachment-title">Attachment</h2>
+                        <h2 id="td-attachment-title">Tệp đính kèm</h2>
                         <p>Private file — only the owner can download</p>
                     </div>
                 </div>
@@ -117,18 +117,12 @@
                 <h2 class="td-sidebar__title">Task information</h2>
                 <div class="td-info-row">
                     <span>Status</span>
-                    <strong>{{ task.status|default:'—'|title }}</strong>
+                    <strong>{{ task.get_status_display }}</strong>
                 </div>
                 <div class="td-info-row">
                     <span>Priority</span>
 
-                    {% if task.priority == "high" %}
-                        <strong class="td-priority td-priority--high">High</strong>
-                    {% elif task.priority == "medium" %}
-                        <strong class="td-priority td-priority--medium">Medium</strong>
-                    {% else %}
-                        <strong class="td-priority td-priority--low">Low</strong>
-                    {% endif %}
+                    {{ task.get_priority_display }}
                 </div>
 
                 <div class="td-info-row">
@@ -161,7 +155,7 @@
             </section>
 
             <section class="td-card td-card--sidebar">
-                <h2 class="td-sidebar__title">Actions</h2>
+                <h2 class="td-sidebar__title">Thao tác</h2>
                 <p class="td-sidebar__hint">Need to change something?</p>
                 <a class="td-btn td-btn--primary td-btn--full"
                     href="{% url 'task_update' pk=task.pk %}">Edit task <span
@@ -170,7 +164,7 @@
                     href="{% url 'task_delete' pk=task.pk %}">Delete task <span
                         aria-hidden="true">×</span></a>
                 <a class="td-btn td-btn--ghost td-btn--full"
-                    href="{% url 'task_list' %}">← Back to tasks</a>
+                    href="{% url 'task_list' %}">← Quay lại danh sách</a>
             </section>
         </aside>
     </div>

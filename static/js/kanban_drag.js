@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!empty && count === 0) {
       empty = document.createElement("div");
       empty.className = "kb-empty";
-      empty.textContent = "No tasks in this column";
+      empty.textContent = "Chưa có công việc";
       body.appendChild(empty);
     }
 
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isOverdue && !badge) {
       badge = document.createElement("span");
       badge.className = "kb-overdue";
-      badge.textContent = "Overdue";
+      badge.textContent = "Quá hạn";
       footer.appendChild(badge);
     } else if (!isOverdue && badge) {
       badge.remove();
@@ -151,7 +151,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const requestUrl = card.dataset.moveUrl;
 
     if (!requestUrl || !newStatus || !csrfInput) {
-      showNotice("Missing move URL or CSRF token.", "error");
+      showNotice(
+        "Không thể cập nhật: thiếu đường dẫn hoặc mã xác thực.",
+        "error",
+      );
       return;
     }
 
@@ -184,13 +187,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.redirected) {
-        throw new Error("Your session may have expired. Please log in again.");
+        throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
       }
 
       const contentType = response.headers.get("content-type") || "";
 
       if (!contentType.includes("application/json")) {
-        throw new Error("Unexpected server response.");
+        throw new Error("Máy chủ trả về phản hồi không hợp lệ.");
       }
 
       // 6. Nhận kết quả từ Django
@@ -211,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
         targetColumn.querySelector("h2")?.textContent || newStatus;
 
       showNotice(
-        `Task #${card.dataset.taskId} moved to ${columnTitle}.`,
+        `Công việc #${card.dataset.taskId} đã chuyển sang ${columnTitle}.`,
         "success",
       );
     } catch (error) {
@@ -221,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
       refreshColumn(sourceColumn);
       refreshColumn(targetColumn);
 
-      showNotice(`Could not save this change: ${error.message}`, "error");
+      showNotice(`Không thể lưu thay đổi: ${error.message}`, "error");
     } finally {
       saving = false;
 

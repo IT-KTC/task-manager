@@ -43,14 +43,14 @@ class Task(models.Model):
         null = True
     )
     class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
-        IN_PROGRESS = "in_progress", "In Progress"
-        COMPLETED = "completed", "Completed"
+        PENDING = "pending", "Chờ thực hiện"
+        IN_PROGRESS = "in_progress", "Đang thực hiện"
+        COMPLETED = "completed", "Hoàn thành"
     status= models.CharField(max_length=20,choices=Status.choices,default=Status.PENDING )
     class Priority(models.TextChoices):
-        LOW = "low", "Low"
-        MEDIUM = "medium", "Medium"
-        HIGH = "high", "High"
+        LOW = "low", "Thấp"
+        MEDIUM = "medium", "Trung bình"
+        HIGH = "high", "Cao"
     priority = models.CharField(
         max_length=10,
         choices=Priority.choices,
@@ -99,3 +99,34 @@ class Task(models.Model):
                 name="task_user_status_created_idx",
             )
         ]
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="task_notifications",
+    )
+
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="notifications",
+    )
+
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]  # noqa: RUF012
+        indexes = [  # noqa: RUF012
+            models.Index(
+                fields=["user", "is_read", "-created_at"],
+                name="notification_user_unread_idx",
+            )
+        ]
+
+    def __str__(self):
+        return self.message

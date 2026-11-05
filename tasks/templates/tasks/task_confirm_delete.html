@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Delete Task | Task Manager{% endblock %}
+{% block title %}Xóa công việc | Task Manager{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/task_delete.css' %}">
@@ -17,7 +17,7 @@
         <span>/</span>
         <a href="{% url 'task_detail' task.pk %}">Task Detail</a>
         <span>/</span>
-        <span>Delete Task</span>
+        <span>Xóa công việc</span>
     </nav>
 
     <div class="dc-card">
@@ -32,7 +32,7 @@
 
             <span class="dc-eyebrow">CONFIRM DELETION</span>
 
-            <h1>Delete this task?</h1>
+            <h1>Xóa công việc này?</h1>
 
             <p class="dc-description">
                 Are you sure you want to delete this task?
@@ -93,14 +93,14 @@
                     href="{% url 'task_detail' task.pk %}"
                     class="dc-btn dc-btn--cancel"
                 >
-                    ← Cancel
+                    ← Hủy
                 </a>
 
                 <button
                     type="submit"
                     class="dc-btn dc-btn--delete"
                 >
-                    Delete Task
+                    Xóa công việc
                 </button>
 
             </form>

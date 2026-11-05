@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Task Manager</title>
+        <title>Quản lý công việc</title>
     </head>
     <body>
 
-        <h1>My tasks</h1>
+        <h1>Công việc của tôi</h1>
 
-        <p>Welcome to my Django Task Manager {{username}}.</p>
+        <p>Chào mừng trở lại {{username}}.</p>
 
         {% if my_tasks %}
         <ul>
@@ -16,7 +16,7 @@
             {% endfor %}
         </ul>
         {%else%}
-        <li> nothing to do </li>
+        <li> đang rãnh </li>
         {% endif %}
     </body>
 </html>
