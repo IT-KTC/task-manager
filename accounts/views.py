@@ -24,7 +24,7 @@ def logout_view(request):
 
         messages.success(
             request,
-            "logout successfully"
+            "Đăng xuất thành công."
         )
 
         return redirect("login")
@@ -44,7 +44,7 @@ def login_view(request):
 
             messages.success(
                 request,
-                "Login successfully!"
+                "Đăng nhập thành công."
             )
 
         
@@ -69,7 +69,10 @@ def register(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request,"OK")
+            messages.success(
+                request,
+                "Đăng ký thành công. Hãy đăng nhập để tiếp tục."
+            )
             return redirect("login")
     else: 
         form = UserCreationForm()

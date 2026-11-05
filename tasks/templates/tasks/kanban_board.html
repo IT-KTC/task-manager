@@ -17,7 +17,7 @@
                 Organize your work, see what is in progress, and celebrate what is done.
             </p>
             <div class="kb-hero__actions">
-                <a class="kb-button kb-button--light" href="{% url 'task_create' %}">+ New Task</a>
+                <a class="kb-button kb-button--light" href="{% url 'task_create' %}">+ Tạo công việc</a>
                 <a class="kb-button kb-button--outline" href="{% url 'task_list' %}">View Task List &rarr;</a>
             </div>
         </div>
@@ -84,18 +84,18 @@
                             {{ task.due_date|date:"d/m/Y" }}
                         </span>
                         {% else %}
-                        <span class="kb-due kb-due--unset">No deadline</span>
+                        <span class="kb-due kb-due--unset">Chưa đặt hạn</span>
                         {% endif %}
 
                         {% if task.is_overdue %}
-                        <span class="kb-overdue">Overdue</span>
+                        <span class="kb-overdue">Quá hạn</span>
                         {% endif %}
                     </div>
                 </article>
                 {% empty %}
                 <div class="kb-empty">
                     <span class="kb-empty__icon" aria-hidden="true">□</span>
-                    <p>No tasks in this column</p>
+                    <p>Chưa có công việc</p>
                 </div>
                 {% endfor %}
             </div>

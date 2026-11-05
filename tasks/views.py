@@ -22,7 +22,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from .forms import TaskForm
-from .models import Task
+from .models import Notification, Task
 from .services import change_task_status, move_task_to_status
 from .tasks import resize_task_image
 
@@ -79,32 +79,34 @@ def kanban_board(request):
         request.user
     ).order_by("-created_at", "-pk")
 
+    
     columns = [
         {
             "key": Task.Status.PENDING,
-            "title": "Pending",
-            "description": "Tasks waiting to start",
+            "title": "Chờ thực hiện",
+            "description": "Công việc chưa bắt đầu",
             "tasks": tasks.filter(
                 status=Task.Status.PENDING
             ),
         },
         {
             "key": Task.Status.IN_PROGRESS,
-            "title": "In Progress",
-            "description": "Tasks currently in progress",
+            "title": "Đang thực hiện",
+            "description": "Công việc đang được xử lý",
             "tasks": tasks.filter(
                 status=Task.Status.IN_PROGRESS
             ),
         },
         {
             "key": Task.Status.COMPLETED,
-            "title": "Completed",
-            "description": "Tasks already finished",
+            "title": "Hoàn thành",
+            "description": "Công việc đã hoàn tất",
             "tasks": tasks.filter(
                 status=Task.Status.COMPLETED
             ),
         },
     ]
+
 
     return render(
         request,
@@ -400,8 +402,7 @@ def task_create(request):
                         lambda task_id = task.pk: queue_image_resize(task_id))
                 messages.success(request,"task created successfully")
                 return redirect("task_list")
-        else:
-            print(form.errors)
+        
     else: 
         form = TaskForm()
     context = {
@@ -448,3 +449,66 @@ def task_detail(request, pk):
         "task": task
     }
     return render(request,"tasks/task_detail.html", context )
+
+@login_required
+def notification_list(request):
+    notifications = Notification.objects.filter(
+        user=request.user
+    )
+
+    page_obj = Paginator(
+        notifications,
+        20
+    ).get_page(request.GET.get("page"))
+
+    return render(
+        request,
+        "tasks/notifications.html",
+        {"page_obj": page_obj}
+    )
+
+
+@login_required
+@require_POST
+def notification_mark_read(request, pk):
+    notification = get_object_or_404(
+        Notification,
+        pk=pk,
+        user=request.user
+    )
+
+    if not notification.is_read:
+        notification.is_read = True
+        notification.save(
+            update_fields=["is_read"]
+        )
+
+    if notification.task_id:
+        task_exists = Task.objects.filter(
+            pk=notification.task_id,
+            user=request.user
+        ).exists()
+
+        if task_exists:
+            return redirect(
+                "task_detail",
+                pk=notification.task_id
+            )
+
+    return redirect("notification_list")
+
+
+@login_required
+@require_POST
+def notification_mark_all_read(request):
+    Notification.objects.filter(
+        user=request.user,
+        is_read=False
+    ).update(is_read=True)
+
+    messages.success(
+        request,
+        "Đã đánh dấu tất cả thông báo là đã đọc."
+    )
+
+    return redirect("notification_list")

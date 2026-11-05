@@ -15,7 +15,7 @@
     <div class="page-header">
 
         <div>
-            <h1>my tasks</h1>
+            <h1>Công việc của tôi</h1>
 
             <p>
                 manage your tasks here
@@ -25,7 +25,7 @@
         <a
             href="{% url 'task_create' %}"
             class="btn btn-primary">
-            add task
+            Thêm công việc
         </a>
 
     </div>
@@ -42,22 +42,22 @@
     >
 
     <select name="status">
-        <option value="">All statuses</option>
-        <option value="pending">Pending</option>
-        <option value="in_progress">In Progress</option>
-        <option value="completed">Completed</option>
+        <option value="">Tất cả trạng thái</option>
+        <option value="pending">Chờ thực hiện</option>
+        <option value="in_progress">Đang thực hiện</option>
+        <option value="completed">Hoàn thành</option>
     </select>
 
     <select name="priority">
-        <option value="">All priorities</option>
-        <option value="high">High</option>
-        <option value="medium">Medium</option>
-        <option value="low">Low</option>
+        <option value="">Tất cả mức ưu tiên</option>
+        <option value="high">Cao</option>
+        <option value="medium">Trung bình</option>
+        <option value="low">Thấp</option>
     </select>
 
     <select name="overdue">
         <option value="">All deadlines</option>
-        <option value="1">Overdue only</option>
+        <option value="1">Quá hạn only</option>
     </select>
 
     <select name="sort">
@@ -68,11 +68,11 @@
     </select>
 
     <button type="submit" class="btn btn-primary">
-        Apply filters
+        Lọc
     </button>
 
     <a href="{% url 'task_list' %}" class="btn btn-secondary">
-        Reset
+        Đặt lại
     </a>
 
 </form>
@@ -144,7 +144,7 @@
                 {% endif %}
 
                 <p>
-                    status:
+                    Trạng thái:
                     {{ task.status }}
                 </p>
                 <div class="task-extra-info">
@@ -164,7 +164,7 @@
                     {% endif %}
 
                     {% if task.is_overdue %}
-                        <span class="task-overdue">⚠ Overdue</span>
+                        <span class="task-overdue">⚠ Quá hạn</span>
                     {% endif %}
 
                 </div>
@@ -293,7 +293,7 @@
     <div class="empty-state">
 
         <p>
-            no tasks found
+            Không tìm thấy công việc
         </p>
 
         <a

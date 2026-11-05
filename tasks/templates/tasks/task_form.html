@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block title %}
-{% if task %}Edit Task{% else %}Create Task{% endif %}
+{% if task %}Chỉnh sửa công việc{% else %}Tạo công việc{% endif %}
 {% endblock %}
 
 {% block extra_css %}
@@ -17,7 +17,7 @@
         <a href="{% url 'task_list' %}">My Tasks</a>
         <span>/</span>
         <span>
-            {% if task %}Edit Task{% else %}Create Task{% endif %}
+            {% if task %}Chỉnh sửa công việc{% else %}Tạo công việc{% endif %}
         </span>
     </nav>
 
@@ -26,12 +26,12 @@
             <span class="tf-eyebrow">TASK MANAGEMENT</span>
 
             {% if task %}
-                <h1>Edit Task</h1>
+                <h1>Chỉnh sửa công việc</h1>
                 <p>
                     Update the information and progress of your task.
                 </p>
             {% else %}
-                <h1>Create a New Task</h1>
+                <h1>Create a Tạo công việc</h1>
                 <p>
                     Organize your work, set priorities,
                     and keep track of deadlines.
@@ -119,7 +119,7 @@
             {% if task %}
                 {% if task.image or task.attachment %}
                     <div class="tf-existing">
-                        <h3>Current files</h3>
+                        <h3>Tệp hiện tại</h3>
 
                         {% if task.image %}
                             <a href="{% url 'task_image' task.pk %}" target="_blank" rel="noopener noreferrer">
@@ -138,14 +138,14 @@
 
             <div class="tf-actions">
                 <a href="{% url 'task_list' %}" class="tf-btn tf-btn--cancel">
-                    Cancel
+                    Hủy
                 </a>
 
                 <button type="submit" class="tf-btn tf-btn--save">
                     {% if task %}
-                        Save Changes →
+                        Lưu thay đổi →
                     {% else %}
-                        Create Task →
+                        Tạo công việc →
                     {% endif %}
                 </button>
             </div>

@@ -24,6 +24,16 @@ class TaskForm(forms.ModelForm):
                 attrs={"type": "date"},
             ),
         }
+        labels = {  # noqa: RUF012
+            "title": "Tên công việc",
+            "description": "Mô tả",
+            "status": "Trạng thái",
+            "priority": "Mức độ ưu tiên",
+            "due_date": "Hạn hoàn thành",
+            "attachment": "Tệp đính kèm",
+            "image": "Hình ảnh",
+        }
+
     def clean_image(self):
         image = self.cleaned_data.get("image")
 
@@ -81,9 +91,9 @@ class TaskForm(forms.ModelForm):
             file.name
         ).suffix.lower()
         if extension not in allowed_extensions: 
-            raise forms.ValidationError( "file type is not allowed")
+            raise forms.ValidationError( "Chỉ chấp nhận tệp PDF, JPG, PNG hoặc DOCX.")
         if file.size > max_size:
             raise forms.ValidationError(
-                "file must be smaller than 5 MB"
+                "Tệp đính kèm không được vượt quá 5 MB."
             )
         return file
