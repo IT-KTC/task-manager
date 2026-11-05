@@ -199,6 +199,7 @@
 }
 
 .auth-field > input,
+.auth-password-wrap > input,
 .auth-field > select,
 .auth-field > textarea {
   display: block;
@@ -222,13 +223,15 @@
 }
 
 .auth-field > input:focus,
+.auth-password-wrap > input:focus,
 .auth-field > select:focus,
 .auth-field > textarea:focus {
   border-color: #818cf8;
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
-.auth-field > input::placeholder {
+.auth-field > input::placeholder,
+.auth-password-wrap > input::placeholder {
   color: #94a3b8;
 }
 
@@ -413,4 +416,53 @@
   .auth-submit:hover {
     transform: none;
   }
+}
+
+/* Password visibility toggle */
+
+.auth-password-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.auth-password-wrap > input {
+  padding-right: 54px;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+
+  color: #64748b;
+  cursor: pointer;
+}
+
+.auth-password-toggle:hover {
+  color: #4f46e5;
+  background: #eef2ff;
+}
+
+.auth-password-toggle:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+.auth-password-toggle .eye-slash {
+  display: none;
+}
+
+.auth-password-toggle[aria-pressed="true"] .eye-slash {
+  display: block;
 }
