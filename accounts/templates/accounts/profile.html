@@ -1,0 +1,126 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Thông tin cá nhân | Task Manager
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet"
+      href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="profile-page">
+
+    <div class="profile-heading">
+        <span class="profile-eyebrow">
+            MY ACCOUNT
+        </span>
+
+        <h1>Thông tin cá nhân</h1>
+        <p>
+            Quản lý thông tin và ảnh đại diện
+            của tài khoản.
+        </p>
+    </div>
+
+    <form method="post"
+          enctype="multipart/form-data"
+          class="profile-card">
+
+        {% csrf_token %}
+
+        <section class="profile-identity">
+
+            <div class="profile-avatar">
+                {% if profile.avatar %}
+                    <img
+                        src="{% url 'profile_avatar' %}"
+                        alt="Ảnh đại diện"
+                    >
+                {% else %}
+                    <span>
+                        {{ user.username|slice:":1"|upper }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div>
+                <h2>{{ user.username }}</h2>
+
+                <p>
+                    {% if user.is_superuser %}
+                        Super Admin
+                    {% elif user.is_staff %}
+                        Staff
+                    {% else %}
+                        Người dùng
+                    {% endif %}
+                </p>
+            </div>
+        </section>
+
+        <div class="profile-fields">
+
+            {% for field in user_form %}
+                <div class="profile-field">
+
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.errors %}
+                        <div class="profile-error">
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+
+            {% for field in profile_form %}
+                <div class="profile-field">
+
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.name == "avatar" %}
+                        <small>
+                            JPG, PNG, WebP — tối đa 2 MB.
+                        </small>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        <div class="profile-error">
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+
+        </div>
+
+        <div class="profile-actions">
+            <button type="submit">
+                Lưu thay đổi
+            </button>
+
+            <a href="{% if user.is_superuser %}{% url 'admin_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}">
+                Quay lại
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

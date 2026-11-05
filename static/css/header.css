@@ -278,3 +278,33 @@
   background: rgba(125, 113, 253, 0.18);
   color: #ffffff;
 }
+
+/* User profile menu */
+
+.tm-user-menu__avatar--image {
+  display: block;
+  object-fit: cover;
+  padding: 0;
+}
+
+.tm-user-menu__profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 11px 13px;
+  margin-bottom: 7px;
+
+  border-radius: 9px;
+  color: #334155;
+  background: #f8faff;
+
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tm-user-menu__profile:hover {
+  background: #eef2ff;
+  color: #4f46e5;
+}

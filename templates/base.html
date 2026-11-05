@@ -94,11 +94,20 @@
                             aria-label="Menu tài khoản">
 
                             <!-- Avatar -->
-                            <span
-                                class="tm-user-menu__avatar"
-                                aria-hidden="true">
-                                {{ user.username|slice:':1'|upper }}
-                            </span>
+                            
+                            {% if user.profile.avatar %}
+                                <img
+                                    class="tm-user-menu__avatar tm-user-menu__avatar--image"
+                                    src="{% url 'profile_avatar' %}"
+                                    alt="Ảnh đại diện"
+                                >
+                            {% else %}
+                                <span class="tm-user-menu__avatar"
+                                    aria-hidden="true">
+                                    {{ user.username|slice:":1"|upper }}
+                                </span>
+                            {% endif %}
+
 
                             <!-- User Information -->
                             <span class="tm-user-menu__identity">
@@ -129,6 +138,14 @@
                                 Xin chào,
                                 <strong>{{ user.username }}</strong>
                             </p>
+                            
+                            <a
+                                href="{% url 'profile' %}"
+                                class="tm-user-menu__profile"
+                            >
+                                <span aria-hidden="true">👤</span>
+                                Thông tin cá nhân
+                            </a>
 
                             <!-- Logout Form -->
                             <form

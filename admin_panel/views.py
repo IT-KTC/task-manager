@@ -1,8 +1,3 @@
-"""Read-only management dashboard for the existing Django User and Task models.
-
-Only active superusers can see global user and task information. Editing users
-continues through the permission-aware built-in Django Admin.
-"""
 
 from functools import wraps
 
