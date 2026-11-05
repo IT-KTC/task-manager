@@ -1,0 +1,75 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Lịch sử công việc | Task Manager
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet"
+      href="{% static 'css/task_social.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="tc-page">
+    <a
+        href="{% url 'task_detail' task.pk %}"
+        class="tc-back"
+    >
+        ← Quay lại công việc
+    </a>
+
+    <div class="tc-section">
+        <span class="tc-eyebrow">TASK TIMELINE</span>
+
+        <h1>Lịch sử hoạt động</h1>
+        <p class="tc-task-name">{{ task.title }}</p>
+
+        <div class="tc-timeline tc-timeline-full">
+            {% for activity in page_obj %}
+                <article class="tc-event">
+                    <div class="tc-event-dot"></div>
+
+                    <div class="tc-event-body">
+                        <strong>
+                            {{ activity.get_action_display }}
+                        </strong>
+
+                        <p>{{ activity.description }}</p>
+
+                        <small>
+                            {{ activity.actor.username|default:"Người thực hiện chưa xác định" }}
+                            · {{ activity.created_at|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                </article>
+            {% empty %}
+                <p class="tc-empty">
+                    Chưa có lịch sử hoạt động.
+                </p>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="tc-pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}">
+                        ← Trang trước
+                    </a>
+                {% endif %}
+
+                <span>
+                    Trang {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">
+                        Trang sau →
+                    </a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

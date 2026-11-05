@@ -1,0 +1,139 @@
+
+<section class="tc-section" id="comments">
+    <div class="tc-heading">
+        <div>
+            <span class="tc-eyebrow">TASK COMMENTS</span>
+            <h2>Bình luận công việc</h2>
+            <p>Ghi chú và trao đổi về tiến độ công việc.</p>
+        </div>
+    </div>
+
+    <form
+        method="post"
+        action="{% url 'task_comment_add' task.pk %}"
+        class="tc-form"
+    >
+        {% csrf_token %}
+
+        <label for="{{ comment_form.body.id_for_label }}">
+            Bình luận của bạn
+        </label>
+
+        {{ comment_form.body }}
+
+        {% if comment_form.body.errors %}
+            <div class="tc-error" role="alert">
+                {{ comment_form.body.errors }}
+            </div>
+        {% endif %}
+
+        <div class="tc-form-actions">
+            <button type="submit">Gửi bình luận</button>
+        </div>
+    </form>
+
+    <div class="tc-comments">
+        {% for comment in comment_page %}
+            <article class="tc-comment">
+                <div class="tc-comment-header">
+                    <div class="tc-comment-avatar">
+                        {{ comment.author.username|default:"?"|slice:":1"|upper }}
+                    </div>
+
+                    <div class="tc-comment-author">
+                        <strong>
+                            {{ comment.author.username|default:"Tài khoản đã xóa" }}
+                        </strong>
+                        <small>
+                            {{ comment.created_at|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                </div>
+
+                <p class="tc-comment-content">
+                    {{ comment.body|linebreaksbr }}
+                </p>
+
+                {% if comment.author_id == request.user.id %}
+                    <form
+                        method="post"
+                        action="{% url 'task_comment_delete' task.pk comment.pk %}"
+                        onsubmit="return confirm('Bạn có chắc muốn xóa bình luận này?');"
+                        class="tc-delete-form"
+                    >
+                        {% csrf_token %}
+                        <button type="submit">
+                            Xóa bình luận
+                        </button>
+                    </form>
+                {% endif %}
+            </article>
+        {% empty %}
+            <p class="tc-empty">
+                Chưa có bình luận nào. Hãy viết bình luận đầu tiên.
+            </p>
+        {% endfor %}
+    </div>
+
+    {% if comment_page.has_other_pages %}
+        <nav class="tc-pagination" aria-label="Phân trang bình luận">
+            {% if comment_page.has_previous %}
+                <a href="?comments_page={{ comment_page.previous_page_number }}#comments">
+                    ← Trang trước
+                </a>
+            {% endif %}
+
+            <span>
+                Trang {{ comment_page.number }}/{{ comment_page.paginator.num_pages }}
+            </span>
+
+            {% if comment_page.has_next %}
+                <a href="?comments_page={{ comment_page.next_page_number }}#comments">
+                    Trang sau →
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+</section>
+
+<section class="tc-section" id="activity">
+    <div class="tc-heading tc-heading-between">
+        <div>
+            <span class="tc-eyebrow">ACTIVITY LOG</span>
+            <h2>Hoạt động gần đây</h2>
+            <p>Lịch sử thay đổi của công việc.</p>
+        </div>
+
+        <a
+            href="{% url 'task_timeline' task.pk %}"
+            class="tc-timeline-link"
+        >
+            Xem toàn bộ →
+        </a>
+    </div>
+
+    <div class="tc-timeline">
+        {% for activity in activity_recent %}
+            <article class="tc-event">
+                <div class="tc-event-dot"></div>
+
+                <div class="tc-event-body">
+                    <strong>
+                        {{ activity.get_action_display }}
+                    </strong>
+
+                    <p>{{ activity.description }}</p>
+
+                    <small>
+                        {{ activity.actor.username|default:"Người thực hiện chưa xác định" }}
+                        · {{ activity.created_at|date:"d/m/Y H:i" }}
+                    </small>
+                </div>
+            </article>
+        {% empty %}
+            <p class="tc-empty">
+                Chưa có hoạt động nào được ghi nhận.
+            </p>
+        {% endfor %}
+    </div>
+</section>

@@ -104,6 +104,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     )
     def complete(self, request, pk =None):
         task = self.get_object()
+        task._activity_actor = request.user
         complete_task(task)
         serializer = self.get_serializer(task)
         return Response(serializer.data)

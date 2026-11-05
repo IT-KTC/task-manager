@@ -5,7 +5,7 @@ class TaskSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source = "user.username")
     class Meta:
         model = Task
-        fields = [
+        fields = [  # noqa: RUF012
             "id",
             "user",
             "title",
@@ -22,6 +22,28 @@ class TaskSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    
+    def create(self, validated_data):
+        task = Task(**validated_data)
+
+        request = self.context.get("request")
+
+        if request and request.user.is_authenticated:
+            task._activity_actor = request.user
+
+        task.save()
+        return task
+
+
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+
+        if request and request.user.is_authenticated:
+            instance._activity_actor = request.user
+
+        return super().update(instance, validated_data)
+
     def validate(self, attrs):
         status_provided = "status" in attrs
         completed_provided = "completed" in attrs

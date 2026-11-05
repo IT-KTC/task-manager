@@ -3,7 +3,7 @@ from pathlib import Path
 from django import forms
 from PIL import Image, UnidentifiedImageError
 
-from .models import Task
+from .models import Task, TaskComment
 
 
 class TaskForm(forms.ModelForm):
@@ -97,3 +97,32 @@ class TaskForm(forms.ModelForm):
                 "Tệp đính kèm không được vượt quá 5 MB."
             )
         return file
+
+class TaskCommentForm(forms.ModelForm):
+    class Meta:
+        model = TaskComment
+        fields = ["body"]  # noqa: RUF012
+
+        labels = {  # noqa: RUF012
+            "body": "Nội dung bình luận",
+        }
+
+        widgets = {  # noqa: RUF012
+            "body": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "maxlength": 2000,
+                    "placeholder": "Viết bình luận của bạn...",
+                }
+            ),
+        }
+
+    def clean_body(self):
+        body = self.cleaned_data["body"].strip()
+
+        if not body:
+            raise forms.ValidationError(
+                "Vui lòng nhập nội dung bình luận."
+            )
+
+        return body
