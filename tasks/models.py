@@ -31,7 +31,20 @@ class Task(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="tasks",
-       
+    )
+    team = models.ForeignKey(
+        "teams.Team",
+        on_delete=models.PROTECT,
+        related_name="tasks",
+        null=True,
+        blank=True,
+    )
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="assigned_tasks",
+        null=True,
+        blank=True,
     )
     attachment = models.FileField(
         upload_to="task_attachments/",
