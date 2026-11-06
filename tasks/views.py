@@ -47,9 +47,8 @@ def queue_image_resize(task_id):
 @require_POST
 def task_quick_status(request, pk):
     task = get_object_or_404(
-        Task,
+        Task.objects.editable_by(request.user),
         pk=pk,
-        user=request.user,
     )
     task._activity_actor = request.user 
     new_status = request.POST.get("status", "")
@@ -80,9 +79,7 @@ def task_quick_status(request, pk):
 
 @login_required
 def kanban_board(request):
-    tasks = Task.objects.for_user(
-        request.user
-    ).order_by("-created_at", "-pk")
+    tasks = Task.objects.editable_by(request.user).order_by("-created_at", "-pk")
 
     
     columns = [
@@ -122,9 +119,8 @@ def kanban_board(request):
 @require_POST
 def kanban_move_task(request, pk):
     task = get_object_or_404(
-        Task,
+        Task.objects.editable_by(request.user),
         pk=pk,
-        user=request.user,
     )
     task._activity_actor = request.user
     new_status = request.POST.get("status", "")
@@ -214,7 +210,10 @@ async def async_test(request):
     )
 @login_required
 def task_download(request,pk):
-    task =get_object_or_404(Task, pk = pk , user = request.user)
+    task = get_object_or_404(
+        Task.objects.visible_to(request.user),
+        pk=pk,
+    )
     if not task.attachment: 
         raise Http404("file not found")
 
@@ -242,9 +241,8 @@ def task_download(request,pk):
 @login_required
 def task_image(request, pk):
     task = get_object_or_404(
-        Task,
+        Task.objects.editable_by(request.user),
         pk=pk,
-        user=request.user,
     )
 
     if not task.image:
@@ -306,7 +304,7 @@ def my_tasks(request):
 
 @login_required
 def task_list(request):
-    tasks = Task.objects.for_user(request.user)
+    tasks = Task.objects.visible_to(request.user)
 
     search = request.GET.get("search", "").strip()
     status = request.GET.get("status", "").strip()
@@ -374,6 +372,15 @@ def task_list(request):
   
     paginator = Paginator(tasks, 5)
     page_obj = paginator.get_page(request.GET.get("page"))
+    page_task_ids = [
+        task.pk for task in page_obj.object_list
+    ]
+
+    manageable_task_ids = set(
+        Task.objects.editable_by(request.user)
+        .filter(pk__in=page_task_ids)
+        .values_list("pk", flat=True)
+    )
 
  
     context = {
@@ -383,6 +390,7 @@ def task_list(request):
         "priority": priority,
         "overdue": overdue,
         "sort": sort,
+        "manageable_task_ids": manageable_task_ids,
     }
 
     return render(
@@ -417,7 +425,11 @@ def task_create(request):
     return render(request, "tasks/task_form.html", context)
 @login_required
 def task_update(request,pk):
-    task = get_object_or_404(Task, pk=pk, user = request.user)
+    task = get_object_or_404(
+        Task.objects.editable_by(request.user),
+        pk=pk,
+    )
+
     task._activity_actor = request.user
     if request.method == "POST": 
         form = TaskForm(request.POST, request.FILES,instance=task )
@@ -437,7 +449,11 @@ def task_update(request,pk):
     return render(request, "tasks/task_form.html",context)
 @login_required
 def task_delete(request,pk):
-    task = get_object_or_404(Task,pk=pk,user = request.user)
+    task = get_object_or_404(
+        Task.objects.editable_by(request.user),
+        pk=pk,
+    )
+
     if request.method == "POST": 
         task.delete()
         messages.success(
@@ -478,15 +494,19 @@ def _task_community_context(request,task,comment_form=None):
         ),
         "comment_page": comment_page,
         "activity_recent": activity_recent,
+        "can_manage_task": (
+            Task.objects.editable_by(request.user)
+            .filter(pk=task.pk)
+            .exists()
+        ),
     }
 
 
 @login_required
 def task_detail(request, pk):
     task = get_object_or_404(
-        Task,
+        Task.objects.visible_to(request.user),
         pk=pk,
-        user=request.user,
     )
 
     context = _task_community_context(
@@ -534,9 +554,10 @@ def notification_mark_read(request, pk):
         )
 
     if notification.task_id:
-        task_exists = Task.objects.filter(
-            pk=notification.task_id,
-            user=request.user
+        task_exists =Task.objects.visible_to(
+            request.user
+        ).filter(
+            pk=notification.task_id
         ).exists()
 
         if task_exists:
@@ -568,9 +589,8 @@ def notification_mark_all_read(request):
 @require_POST
 def task_comment_add(request, pk):
     task = get_object_or_404(
-        Task,
+        Task.objects.visible_to(request.user),
         pk=pk,
-        user=request.user,
     )
 
     form = TaskCommentForm(request.POST)
@@ -614,9 +634,8 @@ def task_comment_add(request, pk):
 @require_POST
 def task_comment_delete(request, pk, comment_id):
     task = get_object_or_404(
-        Task,
+        Task.objects.visible_to(request.user),
         pk=pk,
-        user=request.user,
     )
 
     comment = get_object_or_404(
@@ -647,9 +666,8 @@ def task_comment_delete(request, pk, comment_id):
 @login_required
 def task_timeline(request, pk):
     task = get_object_or_404(
-        Task,
+        Task.objects.visible_to(request.user),
         pk=pk,
-        user=request.user,
     )
 
     activities = task.activities.select_related(

@@ -182,6 +182,7 @@
                     class="btn btn-secondary">
                     view
                 </a>
+                {% if task.pk in manageable_task_ids %}
 
                 <a
                     href="{% url 'task_update' pk=task.pk %}"
@@ -242,6 +243,7 @@
 
                     {% endif %}
                 </form>
+                {% endif %}
             </div>
 
         </div>

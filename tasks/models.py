@@ -14,6 +14,62 @@ class TaskQuerySet(models.QuerySet):
         return self.filter(user = user)
     def recent(self):
         return self.order_by("-created_at")
+    
+    def visible_to(self, user):
+
+        if not user.is_authenticated or not user.is_active:
+            return self.none()
+
+        from teams.models import TeamMembership
+
+        return self.filter(
+            models.Q(
+                team__isnull=True,
+                user=user,
+            )
+            |
+            (
+                models.Q(
+                    team__isnull=False,
+                    team__memberships__user=user,
+                )
+                &
+                (
+                    models.Q(assignee=user)
+                    |
+                    models.Q(
+                        team__memberships__role=(
+                            TeamMembership.Role.LEADER
+                        )
+                    )
+                )
+            )
+        ).distinct()
+
+
+    def editable_by(self, user):
+        
+
+        if not user.is_authenticated or not user.is_active:
+            return self.none()
+
+        from teams.models import TeamMembership
+
+        return self.filter(
+            models.Q(
+                team__isnull=True,
+                user=user,
+            )
+            |
+            models.Q(
+                team__isnull=False,
+                team__memberships__user=user,
+                team__memberships__role=(
+                    TeamMembership.Role.LEADER
+                ),
+            )
+        ).distinct()
+
 
 
 

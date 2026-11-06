@@ -158,12 +158,14 @@
             <section class="td-card td-card--sidebar">
                 <h2 class="td-sidebar__title">Thao tác</h2>
                 <p class="td-sidebar__hint">Need to change something?</p>
+                {% if can_manage_task %}
                 <a class="td-btn td-btn--primary td-btn--full"
                     href="{% url 'task_update' pk=task.pk %}">Edit task <span
                         aria-hidden="true">↗</span></a>
                 <a class="td-btn td-btn--danger td-btn--full"
                     href="{% url 'task_delete' pk=task.pk %}">Delete task <span
                         aria-hidden="true">×</span></a>
+                {% endif %}
                 <a class="td-btn td-btn--ghost td-btn--full"
                     href="{% url 'task_list' %}">← Quay lại danh sách</a>
             </section>
