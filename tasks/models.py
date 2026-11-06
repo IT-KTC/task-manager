@@ -175,6 +175,9 @@ class TaskActivity(models.Model):
         STATUS_CHANGED = "status_changed", "Đổi trạng thái"
         COMMENT_ADDED = "comment_added", "Thêm bình luận"
         COMMENT_DELETED = "comment_deleted", "Xóa bình luận"
+        ASSIGNED = "assigned", "Giao công việc"
+        REASSIGNED = "reassigned", "Đổi người phụ trách"
+        UNASSIGNED = "unassigned", "Bỏ phân công"
 
     task = models.ForeignKey(
         Task,
