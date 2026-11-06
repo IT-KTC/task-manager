@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Tiến độ nhóm {{ team.name }} | Task Manager{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/teams.css' %}">{% endblock %}
+
+{% block content %}
+<div class="team-ui">
+    <nav class="team-crumb" aria-label="Đường dẫn trang"><a href="{% url 'team_list' %}">Nhóm của tôi</a><span aria-hidden="true">/</span><a href="{% url 'team_detail' team.pk %}">{{ team.name }}</a><span aria-hidden="true">/</span><span>Tiến độ</span></nav>
+    <header class="team-page-heading team-page-heading--actions">
+        <div><span class="team-eyebrow">TEAM PERFORMANCE</span><h1>Tiến độ công việc</h1><p>Tổng quan kết quả thực hiện và khối lượng công việc của từng thành viên.</p></div>
+        <a class="team-btn team-btn--outline" href="{% url 'team_detail' team.pk %}">← Quay lại nhóm</a>
+    </header>
+    <section class="team-stats" aria-label="Thống kê tiến độ">
+        <article class="team-stat-card"><span class="team-stat-card__icon team-stat-card__icon--blue" aria-hidden="true">▤</span><span class="team-stat-card__label">Tổng công việc</span><strong>{{ totals.total|default:0 }}</strong><small>Trong toàn bộ nhóm</small></article>
+        <article class="team-stat-card"><span class="team-stat-card__icon team-stat-card__icon--indigo" aria-hidden="true">○</span><span class="team-stat-card__label">Chờ thực hiện</span><strong>{{ totals.pending|default:0 }}</strong><small>Chưa bắt đầu xử lý</small></article>
+        <article class="team-stat-card"><span class="team-stat-card__icon team-stat-card__icon--amber" aria-hidden="true">◷</span><span class="team-stat-card__label">Đang thực hiện</span><strong>{{ totals.in_progress|default:0 }}</strong><small>Cần theo dõi tiến độ</small></article>
+        <article class="team-stat-card"><span class="team-stat-card__icon team-stat-card__icon--green" aria-hidden="true">✓</span><span class="team-stat-card__label">Đã hoàn thành</span><strong>{{ totals.completed|default:0 }}</strong><small>Đã xử lý xong</small></article>
+    </section>
+    <section class="team-card" aria-labelledby="team-progress-heading">
+        <div class="team-card-heading team-card-heading--between"><div class="team-card-heading__with-icon"><span class="team-card-heading__icon" aria-hidden="true">◷</span><div><h2 id="team-progress-heading">Tiến độ theo thành viên</h2><p>Tỷ lệ hoàn thành dựa trên số Task đang được giao cho từng người.</p></div></div><span class="team-chip team-chip--neutral">{{ member_stats|length }} thành viên</span></div>
+        <div class="team-progress-grid">
+            {% for row in member_stats %}
+            <article class="team-progress-member">
+                <div class="team-progress-member__head"><div class="team-member-item__avatar" aria-hidden="true">{{ row.membership.user.username|slice:":1"|upper }}</div><div class="team-progress-member__person"><strong>{{ row.membership.user.username }}</strong><small>{{ row.membership.get_role_display }}</small></div><strong class="team-progress-member__percent">{{ row.percent }}%</strong></div>
+                <div class="team-progress-track" role="progressbar" aria-valuenow="{{ row.percent }}" aria-valuemin="0" aria-valuemax="100" aria-label="Tiến độ của {{ row.membership.user.username }}"><div class="team-progress-track__fill" style="width:{{ row.percent }}%"></div></div>
+                <div class="team-progress-member__metrics"><span>Tổng <strong>{{ row.total }}</strong></span><span>Đang làm <strong>{{ row.in_progress }}</strong></span><span>Hoàn thành <strong>{{ row.completed }}</strong></span></div>
+            </article>
+            {% empty %}<div class="team-empty-state team-empty-state--span"><h3>Chưa có thành viên</h3><p>Thêm thành viên để theo dõi tiến độ từng người.</p></div>{% endfor %}
+        </div>
+    </section>
+    <section class="team-card" aria-labelledby="team-attention-heading">
+        <div class="team-card-heading"><span class="team-card-heading__icon" aria-hidden="true">!</span><div><h2 id="team-attention-heading">Công việc cần chú ý</h2><p>Kiểm tra những Task đang cần phân công lại.</p></div></div>
+        <div class="team-attention-grid"><div class="team-attention-item"><div><strong>Chưa có người phụ trách</strong><small>Task đang chờ được phân công</small></div><span class="team-attention-item__count">{{ unassigned_count|default:0 }}</span></div><div class="team-attention-item"><div><strong>Người phụ trách đã rời nhóm</strong><small>Hãy xem xét phân công lại</small></div><span class="team-attention-item__count team-attention-item__count--warn">{{ former_member_count|default:0 }}</span></div></div>
+    </section>
+</div>
+{% endblock %}

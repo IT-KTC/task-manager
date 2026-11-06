@@ -1,7 +1,10 @@
 
 from django import forms
+from django.contrib.auth import get_user_model
 
+from tasks.forms import TaskForm
 
+User = get_user_model()
 class TeamCreateForm(forms.Form):
     name = forms.CharField(
         max_length=150,
@@ -45,3 +48,44 @@ class TeamMemberAddForm(forms.Form):
             )
 
         return username
+
+class TeamTaskCreateForm(TaskForm):
+    assignee = forms.ModelChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        empty_label="Chưa phân công",
+        label="Người phụ trách",
+    )
+
+    def __init__(self, *args, team, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["assignee"].queryset = (
+            User.objects.filter(
+                team_memberships__team=team,
+                is_active=True,
+            )
+            .distinct()
+            .order_by("username")
+        )
+
+
+class TeamTaskAssignForm(forms.Form):
+    assignee = forms.ModelChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        empty_label="Chưa phân công",
+        label="Chọn người phụ trách",
+    )
+
+    def __init__(self, *args, team, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["assignee"].queryset = (
+            User.objects.filter(
+                team_memberships__team=team,
+                is_active=True,
+            )
+            .distinct()
+            .order_by("username")
+        )

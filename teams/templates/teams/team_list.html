@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Nhóm của tôi | Task Manager{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/teams.css' %}">{% endblock %}
+
+{% block content %}
+<div class="team-ui">
+    <nav class="team-crumb" aria-label="Đường dẫn trang">
+        <a href="{% url 'dashboard' %}">Tổng quan</a><span aria-hidden="true">/</span><span>Nhóm của tôi</span>
+    </nav>
+
+    <header class="team-page-heading team-page-heading--actions">
+        <div>
+            <span class="team-eyebrow">TEAM WORKSPACE</span>
+            <h1>Nhóm của tôi</h1>
+            <p>Không gian phối hợp công việc, theo dõi tiến độ và làm việc cùng các thành viên.</p>
+        </div>
+        <a class="team-btn team-btn--primary" href="{% url 'team_create' %}"><span aria-hidden="true">＋</span> Tạo nhóm mới</a>
+    </header>
+
+    <section class="team-summary" aria-label="Tổng quan nhóm">
+        <div class="team-summary__icon" aria-hidden="true">▦</div>
+        <div class="team-summary__copy">
+            <span>Tổng số nhóm đang tham gia</span>
+            <strong>{{ teams|length }}</strong>
+            <p>Chọn một nhóm bên dưới để mở không gian làm việc.</p>
+        </div>
+        <div class="team-summary__decoration" aria-hidden="true"></div>
+    </section>
+
+    <div class="team-section-title">
+        <div><h2>Danh sách nhóm</h2><p>Các nhóm bạn có quyền truy cập.</p></div>
+    </div>
+    <section class="team-group-grid" aria-label="Danh sách nhóm">
+        {% for team in teams %}
+        <article class="team-group-card">
+            <div class="team-group-card__top">
+                <div class="team-group-card__avatar" aria-hidden="true">{{ team.name|slice:":1"|upper }}</div>
+                <span class="team-chip team-chip--neutral">Nhóm làm việc</span>
+            </div>
+            <h3><a href="{% url 'team_detail' team.pk %}">{{ team.name }}</a></h3>
+            <p class="team-group-card__description">{{ team.description|default:"Chưa có mô tả cho nhóm này."|truncatechars:125 }}</p>
+            <div class="team-group-card__meta">
+                <span>◉ Tạo bởi <strong>{{ team.created_by.username }}</strong></span>
+                <span>◷ {{ team.created_at|date:"d/m/Y" }}</span>
+            </div>
+            <a class="team-group-card__open" href="{% url 'team_detail' team.pk %}">Mở không gian nhóm <span aria-hidden="true">↗</span></a>
+        </article>
+        {% empty %}
+        <div class="team-empty-state team-empty-state--span">
+            <span class="team-empty-state__icon" aria-hidden="true">▦</span>
+            <h3>Chưa có nhóm nào</h3>
+            <p>Bạn chưa tham gia nhóm. Tạo nhóm đầu tiên để bắt đầu cộng tác.</p>
+            <a class="team-btn team-btn--primary" href="{% url 'team_create' %}">＋ Tạo nhóm đầu tiên</a>
+        </div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

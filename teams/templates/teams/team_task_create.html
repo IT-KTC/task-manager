@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Tạo công việc nhóm | Task Manager{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/teams.css' %}">{% endblock %}
+
+{% block content %}
+<div class="team-ui team-ui--form">
+    <nav class="team-crumb" aria-label="Đường dẫn trang">
+        <a href="{% url 'team_list' %}">Nhóm của tôi</a><span aria-hidden="true">/</span><a href="{% url 'team_detail' team.pk %}">{{ team.name }}</a><span aria-hidden="true">/</span><span>Tạo công việc</span>
+    </nav>
+    <header class="team-form-hero"><div><span class="team-hero__eyebrow">TEAM TASK MANAGEMENT</span><h1>Tạo công việc nhóm</h1><p>Đặt mục tiêu rõ ràng, phân công phù hợp và theo dõi tiến độ dễ dàng.</p></div><div class="team-form-hero__symbol" aria-hidden="true">✓</div></header>
+
+    <section class="team-card team-form-card">
+        <div class="team-card-heading"><div class="team-card-heading__icon" aria-hidden="true">✎</div><div><h2>Thông tin công việc</h2><p>Điền nội dung và chọn người phụ trách trong nhóm.</p></div></div>
+        <div class="team-context"><span class="team-context__label">Nhóm thực hiện</span><span class="team-context__value">▦ {{ team.name }}</span><span class="team-context__note">Người tạo: {{ request.user.username }}</span></div>
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="team-form-alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="team-form-grid">
+                {% for field in form %}
+                {% if field.is_hidden %}{{ field }}{% else %}
+                <div class="team-field {% if field.name == 'title' or field.name == 'description' or field.name == 'attachment' or field.name == 'image' %}team-field--wide{% endif %} {% if field.errors %}team-field--error{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="team-required" aria-label="Bắt buộc"> *</span>{% endif %}</label>
+                    <div class="team-field__control">{{ field }}</div>
+                    {% if field.name == 'assignee' %}<div class="team-field__hint">Chỉ hiển thị thành viên đang hoạt động. Để trống nếu muốn phân công sau.</div>{% endif %}
+                    {% if field.name == 'due_date' %}<div class="team-field__hint">Chọn thời hạn hoàn thành dự kiến.</div>{% endif %}
+                    {% if field.name == 'attachment' or field.name == 'image' %}<div class="team-field__hint">Giới hạn loại và dung lượng tệp theo quy định của hệ thống.</div>{% endif %}
+                    {% if field.help_text %}<div class="team-field__hint">{{ field.help_text }}</div>{% endif %}
+                    {% for error in field.errors %}<div class="team-field__error" role="alert">{{ error }}</div>{% endfor %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="team-info-note"><span aria-hidden="true">ⓘ</span><p>Thành viên nhận Task sẽ được thông báo. Trưởng nhóm có thể đổi hoặc bỏ phân công sau khi tạo.</p></div>
+            <div class="team-form-actions"><a class="team-btn team-btn--secondary" href="{% url 'team_detail' team.pk %}">Hủy bỏ</a><button type="submit" class="team-btn team-btn--primary">Tạo công việc <span aria-hidden="true">→</span></button></div>
+        </form>
+    </section>
+    <p class="team-bottom-note">Công việc nhóm được quản lý theo quyền truy cập của Team.</p>
+</div>
+{% endblock %}

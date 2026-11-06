@@ -73,12 +73,11 @@ def complete_task(task):
 @transaction.atomic
 def assign_task(*, actor, task, assignee):
     
-    task = (
-        Task.objects
-        .select_for_update()
-        .select_related("team", "assignee")
-        .get(pk=task.pk)
-    )
+    ask = (
+    Task.objects
+    .select_for_update()
+    .get(pk=task.pk)
+)
 
     if task.team_id is None:
         raise ValidationError(

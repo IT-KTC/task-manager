@@ -32,4 +32,23 @@ urlpatterns = [
         views.team_detail,
         name="team_detail"
     ),
+    
+    path(
+        "<int:pk>/tasks/create/",
+        views.team_task_create,
+        name="team_task_create",
+    ),
+
+    path(
+        "<int:pk>/tasks/<int:task_pk>/assign/",
+        views.team_task_assign,
+        name="team_task_assign",
+    ),
+
+    path(
+        "<int:pk>/progress/",
+        views.team_progress,
+        name="team_progress",
+    ),
+
 ]

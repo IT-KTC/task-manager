@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Phân công công việc | Task Manager{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/teams.css' %}">{% endblock %}
+
+{% block content %}
+<div class="team-ui team-ui--narrow">
+    <nav class="team-crumb" aria-label="Đường dẫn trang">
+        <a href="{% url 'team_list' %}">Nhóm của tôi</a><span aria-hidden="true">/</span><a href="{% url 'team_detail' team.pk %}">{{ team.name }}</a><span aria-hidden="true">/</span><span>Phân công</span>
+    </nav>
+    <header class="team-page-heading"><span class="team-eyebrow">TEAM ASSIGNMENT</span><h1>Phân công công việc</h1><p>Chọn thành viên phù hợp để tiếp nhận hoặc chuyển giao nhiệm vụ.</p></header>
+    <section class="team-card team-form-card">
+        <div class="team-card-heading"><div class="team-card-heading__icon" aria-hidden="true">⇄</div><div><h2>Thông tin phân công</h2><p>Chỉ trưởng nhóm mới có thể thay đổi người phụ trách.</p></div></div>
+        <div class="team-task-preview">
+            <div class="team-task-preview__top"><span class="team-chip team-chip--leader">▦ {{ team.name }}</span><span class="team-task-preview__id">Task #{{ task.pk }}</span></div>
+            <h3>{{ task.title }}</h3>
+            <p>{{ task.description|default:"Chưa có mô tả cho công việc này."|truncatechars:170 }}</p>
+            <div class="team-task-preview__facts"><span>Trạng thái <strong>{{ task.get_status_display }}</strong></span><span>Đang phụ trách <strong>{{ task.assignee.username|default:"Chưa phân công" }}</strong></span>{% if task.due_date %}<span>Hạn <strong>{{ task.due_date|date:"d/m/Y" }}</strong></span>{% endif %}</div>
+        </div>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="team-form-alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="team-form-grid">
+                <div class="team-field team-field--wide {% if form.assignee.errors %}team-field--error{% endif %}">
+                    <label for="{{ form.assignee.id_for_label }}">{{ form.assignee.label }}</label>
+                    <div class="team-field__control">{{ form.assignee }}</div>
+                    <span class="team-field__hint">Chọn một thành viên đang hoạt động; chọn “Chưa phân công” để bỏ người phụ trách.</span>
+                    {% for error in form.assignee.errors %}<span class="team-field__error" role="alert">{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+            <div class="team-info-note"><span aria-hidden="true">ⓘ</span><p>Việc thay đổi sẽ được ghi vào lịch sử hoạt động và gửi thông báo cho người liên quan.</p></div>
+            <div class="team-form-actions"><a class="team-btn team-btn--secondary" href="{% url 'team_detail' team.pk %}">Hủy</a><button type="submit" class="team-btn team-btn--primary">Lưu phân công <span aria-hidden="true">→</span></button></div>
+        </form>
+    </section>
+</div>
+{% endblock %}

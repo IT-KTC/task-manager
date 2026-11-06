@@ -56,7 +56,8 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "tasks",
     "accounts",
-    "admin_panel"
+    "admin_panel",
+    "teams.apps.TeamsConfig",
 
 
 ]
@@ -192,6 +193,19 @@ CACHES = {
         "KEY_PREFIX": "taskmanager",
     }
 }
+if (
+    DJANGO_ENV == "local"
+    and os.getenv("USE_LOCMEM_CACHE") == "1"
+):
+    CACHES["default"] = {
+        "BACKEND": (
+            "django.core.cache.backends.locmem.LocMemCache"
+        ),
+        "LOCATION": "task-manager-local",
+        "TIMEOUT": 300,
+        "KEY_PREFIX": "taskmanager",
+    }
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

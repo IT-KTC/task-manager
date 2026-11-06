@@ -1,125 +1,104 @@
-
 {% extends "base.html" %}
-
-{% block title %}
-{{ team.name }} | Task Manager
-{% endblock %}
+{% load static %}
+{% block title %}{{ team.name }} | Task Manager{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/teams.css' %}">{% endblock %}
 
 {% block content %}
+<div class="team-ui">
+    <nav class="team-crumb" aria-label="Đường dẫn trang">
+        <a href="{% url 'team_list' %}">Nhóm của tôi</a><span aria-hidden="true">/</span><span>{{ team.name }}</span>
+    </nav>
 
-<div style="max-width:1000px;margin:40px auto;padding:20px;">
+    <header class="team-hero">
+        <div class="team-hero__content">
+            <span class="team-hero__eyebrow"><span class="team-live-dot" aria-hidden="true"></span> KHÔNG GIAN LÀM VIỆC</span>
+            <h1>{{ team.name }}</h1>
+            <p>{{ team.description|default:"Theo dõi thành viên, phân công công việc và quản lý tiến độ trong cùng một nơi." }}</p>
+            <div class="team-hero__meta">
+                <span>◉ Người tạo: <strong>{{ team.created_by.username }}</strong></span>
+                <span>◷ {{ team.created_at|date:"d/m/Y" }}</span>
+                {% if is_leader %}<span class="team-hero__role">★ Bạn là trưởng nhóm</span>{% endif %}
+            </div>
+        </div>
+        <div class="team-hero__actions">
+            {% if is_leader %}
+            <a class="team-btn team-btn--hero-ghost" href="{% url 'team_progress' team.pk %}">▤ Tiến độ nhóm</a>
+            <a class="team-btn team-btn--hero" href="{% url 'team_task_create' team.pk %}">＋ Tạo công việc</a>
+            {% else %}
+            <span class="team-hero__role">✓ Thành viên nhóm</span>
+            {% endif %}
+        </div>
+        <span class="team-hero__ring" aria-hidden="true"></span>
+    </header>
 
-    <a href="{% url 'team_list' %}">
-        ← Quay lại danh sách nhóm
-    </a>
+    <section class="team-stats" aria-label="Thống kê công việc">
+        <article class="team-stat-card"><span class="team-stat-card__icon team-stat-card__icon--blue" aria-hidden="true">♧</span><span class="team-stat-card__label">Thành viên</span><strong>{{ memberships|length }}</strong><small>Đang tham gia nhóm</small></article>
+        <article class="team-stat-card"><span class="team-stat-card__icon team-stat-card__icon--indigo" aria-hidden="true">▤</span><span class="team-stat-card__label">Công việc hiển thị</span><strong>{{ task_stats.total|default:0 }}</strong><small>{% if is_leader %}Tất cả công việc nhóm{% else %}Công việc được giao{% endif %}</small></article>
+        <article class="team-stat-card"><span class="team-stat-card__icon team-stat-card__icon--amber" aria-hidden="true">◷</span><span class="team-stat-card__label">Đang thực hiện</span><strong>{{ task_stats.in_progress|default:0 }}</strong><small>Công việc đang xử lý</small></article>
+        <article class="team-stat-card"><span class="team-stat-card__icon team-stat-card__icon--green" aria-hidden="true">✓</span><span class="team-stat-card__label">Hoàn thành</span><strong>{{ task_stats.completed|default:0 }}</strong><small>Công việc đã hoàn tất</small></article>
+    </section>
 
-    <section style="
-        background:white;
-        padding:28px;
-        border:1px solid #e2e8f0;
-        border-radius:14px;
-        margin-top:20px;
-    ">
-
-        <h1>{{ team.name }}</h1>
-
-        <p>
-            {{ team.description|default:"Chưa có mô tả" }}
-        </p>
-
-        <p>
-            Người tạo: {{ team.created_by.username }}
-        </p>
-
-        <p>
-            Tổng thành viên: {{ memberships|length }}
-        </p>
-
-        
-        {% if is_leader %}
-            <p style="color:#4f46e5;">
-                Bạn là trưởng nhóm này.
-            </p>
-
-            <a href="{% url 'team_member_add' team.pk %}">
-                + Thêm thành viên
-            </a>
+    <section class="team-card" id="tasks" aria-labelledby="team-tasks-heading">
+        <div class="team-card-heading team-card-heading--between">
+            <div class="team-card-heading__with-icon">
+                <span class="team-card-heading__icon" aria-hidden="true">▤</span>
+                <div><h2 id="team-tasks-heading">{% if is_leader %}Công việc của nhóm{% else %}Công việc được giao cho tôi{% endif %}</h2><p>{% if is_leader %}Theo dõi công việc và người phụ trách từng nhiệm vụ.{% else %}Danh sách nhiệm vụ bạn đang được giao trong nhóm.{% endif %}</p></div>
+            </div>
+            {% if is_leader %}<a href="{% url 'team_task_create' team.pk %}" class="team-btn team-btn--primary team-btn--small">＋ Thêm công việc</a>{% endif %}
+        </div>
+        {% if team_tasks %}
+        <p class="team-table-hint">↔ Vuốt ngang để xem đủ các cột trên điện thoại.</p>
+        <div class="team-table-wrap">
+            <table class="team-table">
+                <thead><tr><th>Công việc</th><th>Người phụ trách</th><th>Trạng thái</th><th>Hạn hoàn thành</th><th>Thao tác</th></tr></thead>
+                <tbody>
+                {% for task in team_tasks %}
+                <tr>
+                    <td>
+                        <a class="team-task-title" href="{% url 'task_detail' task.pk %}">{{ task.title }}</a>
+                        <div class="team-task-sub">#{{ task.pk }} <span class="team-separator">·</span>
+                        {% if task.priority == 'high' %}<span class="team-priority team-priority--high">Ưu tiên cao</span>
+                        {% elif task.priority == 'low' %}<span class="team-priority team-priority--low">Ưu tiên thấp</span>
+                        {% else %}<span class="team-priority team-priority--medium">Ưu tiên vừa</span>{% endif %}
+                        </div>
+                    </td>
+                    <td>{% if task.assignee %}<div class="team-person"><span class="team-person__avatar" aria-hidden="true">{{ task.assignee.username|slice:":1"|upper }}</span><span>{{ task.assignee.username }}</span></div>{% else %}<span class="team-muted">Chưa phân công</span>{% endif %}</td>
+                    <td><span class="team-status team-status--{{ task.status }}">{{ task.get_status_display }}</span></td>
+                    <td>{% if task.due_date %}<span class="team-date">{{ task.due_date|date:"d/m/Y" }}</span>{% if task.is_overdue %}<span class="team-overdue">Quá hạn</span>{% endif %}{% else %}<span class="team-muted">Chưa đặt hạn</span>{% endif %}</td>
+                    <td><div class="team-row-actions"><a href="{% url 'task_detail' task.pk %}">Xem</a>{% if is_leader %}<a href="{% url 'team_task_assign' team.pk task.pk %}">Phân công ↗</a>{% endif %}</div></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="team-empty-state"><span class="team-empty-state__icon" aria-hidden="true">▤</span><h3>Chưa có công việc nào</h3><p>{% if is_leader %}Tạo công việc đầu tiên và phân công cho thành viên nhóm.{% else %}Hiện chưa có nhiệm vụ nào được giao cho bạn trong nhóm.{% endif %}</p>{% if is_leader %}<a class="team-btn team-btn--primary" href="{% url 'team_task_create' team.pk %}">＋ Tạo công việc</a>{% endif %}</div>
         {% endif %}
-
-
     </section>
 
-    <section style="
-        background:white;
-        padding:28px;
-        border:1px solid #e2e8f0;
-        border-radius:14px;
-        margin-top:20px;
-    ">
-
-        <h2>Danh sách thành viên</h2>
-
-        {% for membership in memberships %}
-
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                padding:15px 0;
-                border-bottom:1px solid #e2e8f0;
-            ">
-
-                <div>
-                    <strong>
-                        {{ membership.user.username }}
-                    </strong>
-
-                    <p>
-                        {{ membership.user.email|default:"Chưa có email" }}
-                    </p>
-                </div>
-
-                
-            <div>
-                <span>
-                    {{ membership.get_role_display }}
-                </span>
-
-                {% if is_leader and membership.role == "member" %}
-                    <form
-                        method="post"
-                        action="{% url 'team_member_remove' team.pk membership.pk %}"
-                        onsubmit="return confirm('Bạn có chắc muốn xóa thành viên này khỏi nhóm?');"
-                    >
-                        {% csrf_token %}
-
-                        <button
-                            type="submit"
-                            style="
-                                color:#dc2626;
-                                background:transparent;
-                                border:none;
-                                cursor:pointer;
-                                margin-top:10px;
-                            "
-                        >
-                            Xóa khỏi nhóm
-                        </button>
+    <section class="team-card" id="members" aria-labelledby="team-members-heading">
+        <div class="team-card-heading team-card-heading--between">
+            <div class="team-card-heading__with-icon"><span class="team-card-heading__icon" aria-hidden="true">♧</span><div><h2 id="team-members-heading">Thành viên nhóm</h2><p>Danh sách tài khoản và vai trò trong nhóm.</p></div></div>
+            {% if is_leader %}<a class="team-btn team-btn--outline team-btn--small" href="{% url 'team_member_add' team.pk %}">＋ Thêm thành viên</a>{% endif %}
+        </div>
+        <div class="team-members-grid">
+            {% for membership in memberships %}
+            <article class="team-member-item">
+                <div class="team-member-item__avatar" aria-hidden="true">{{ membership.user.username|slice:":1"|upper }}</div>
+                <div class="team-member-item__info"><strong>{{ membership.user.username }}</strong><small>{{ membership.user.email|default:"Chưa cập nhật email" }}</small></div>
+                <div class="team-member-item__actions">
+                    {% if membership.role == 'leader' %}<span class="team-chip team-chip--leader">★ Trưởng nhóm</span>
+                    {% else %}<span class="team-chip team-chip--neutral">Thành viên</span>
+                    {% if is_leader %}
+                    <form method="post" action="{% url 'team_member_remove' team.pk membership.pk %}" onsubmit="return confirm('Bạn có chắc muốn xóa thành viên này khỏi nhóm?');">
+                        {% csrf_token %}<button type="submit" class="team-text-danger">Xóa khỏi nhóm</button>
                     </form>
-                {% endif %}
-            </div>
-
-
-            </div>
-
-        {% empty %}
-
-            <p>Nhóm chưa có thành viên.</p>
-
-        {% endfor %}
-
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}<div class="team-empty-state team-empty-state--span"><p>Nhóm chưa có thành viên.</p></div>{% endfor %}
+        </div>
     </section>
-
 </div>
-
 {% endblock %}
