@@ -1,0 +1,125 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+{{ team.name }} | Task Manager
+{% endblock %}
+
+{% block content %}
+
+<div style="max-width:1000px;margin:40px auto;padding:20px;">
+
+    <a href="{% url 'team_list' %}">
+        ← Quay lại danh sách nhóm
+    </a>
+
+    <section style="
+        background:white;
+        padding:28px;
+        border:1px solid #e2e8f0;
+        border-radius:14px;
+        margin-top:20px;
+    ">
+
+        <h1>{{ team.name }}</h1>
+
+        <p>
+            {{ team.description|default:"Chưa có mô tả" }}
+        </p>
+
+        <p>
+            Người tạo: {{ team.created_by.username }}
+        </p>
+
+        <p>
+            Tổng thành viên: {{ memberships|length }}
+        </p>
+
+        
+        {% if is_leader %}
+            <p style="color:#4f46e5;">
+                Bạn là trưởng nhóm này.
+            </p>
+
+            <a href="{% url 'team_member_add' team.pk %}">
+                + Thêm thành viên
+            </a>
+        {% endif %}
+
+
+    </section>
+
+    <section style="
+        background:white;
+        padding:28px;
+        border:1px solid #e2e8f0;
+        border-radius:14px;
+        margin-top:20px;
+    ">
+
+        <h2>Danh sách thành viên</h2>
+
+        {% for membership in memberships %}
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                padding:15px 0;
+                border-bottom:1px solid #e2e8f0;
+            ">
+
+                <div>
+                    <strong>
+                        {{ membership.user.username }}
+                    </strong>
+
+                    <p>
+                        {{ membership.user.email|default:"Chưa có email" }}
+                    </p>
+                </div>
+
+                
+            <div>
+                <span>
+                    {{ membership.get_role_display }}
+                </span>
+
+                {% if is_leader and membership.role == "member" %}
+                    <form
+                        method="post"
+                        action="{% url 'team_member_remove' team.pk membership.pk %}"
+                        onsubmit="return confirm('Bạn có chắc muốn xóa thành viên này khỏi nhóm?');"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            style="
+                                color:#dc2626;
+                                background:transparent;
+                                border:none;
+                                cursor:pointer;
+                                margin-top:10px;
+                            "
+                        >
+                            Xóa khỏi nhóm
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+
+            </div>
+
+        {% empty %}
+
+            <p>Nhóm chưa có thành viên.</p>
+
+        {% endfor %}
+
+    </section>
+
+</div>
+
+{% endblock %}

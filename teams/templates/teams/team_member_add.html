@@ -1,0 +1,76 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+Thêm thành viên | Task Manager
+{% endblock %}
+
+{% block content %}
+
+<div style="max-width:650px;margin:40px auto;padding:20px;">
+
+    <a href="{% url 'team_detail' team.pk %}">
+        ← Quay lại nhóm
+    </a>
+
+    <section style="
+        background:white;
+        padding:28px;
+        margin-top:20px;
+        border:1px solid #e2e8f0;
+        border-radius:14px;
+    ">
+
+        <h1>Thêm thành viên</h1>
+
+        <p>
+            Nhóm: <strong>{{ team.name }}</strong>
+        </p>
+
+        <p>
+            Nhập username của tài khoản đã đăng ký
+            để thêm người đó vào nhóm.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+
+                <div style="margin:20px 0;">
+
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    <div style="margin-top:8px;">
+                        {{ field }}
+                    </div>
+
+                    {% if field.errors %}
+                        <div
+                            role="alert"
+                            style="color:#dc2626;margin-top:8px;"
+                        >
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            {% endfor %}
+
+            <button type="submit">
+                Thêm thành viên
+            </button>
+
+            <a href="{% url 'team_detail' team.pk %}">
+                Hủy
+            </a>
+        </form>
+
+    </section>
+
+</div>
+
+{% endblock %}
